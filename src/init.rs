@@ -11,23 +11,23 @@ where P: AsRef<Path>, {
 use std::process::{Command, Child};
 use std::collections::HashMap;
 
-fn spawn_service(servicename: String, command: &mut Command, services: &mut HashMap<String, u32>) {
+fn spawn_service(servicename: String, command: &mut Command, services: &mut HashMap<String, Child>) {
     if let Ok(child) = command.spawn() {
         println!("Lazy: spawn {} {}", servicename, child.id());
-        services.insert(servicename, child.id());
+        services.insert(servicename, child);
     } else {
         println!("Lazy: {} failed", servicename);
     }
 }
 
-fn parse_init_file<P>(path: P, services: &mut HashMap<String, u32>) where P: AsRef<Path> {
+fn parse_init_file<P>(path: P, services: &mut HashMap<String, Child>) where P: AsRef<Path> {
     if let Ok(lines) = read_lines(path) {
         for line in lines {
-            if let Ok(ref x) = line {
+            if let Ok(ref _x) = line {
                 // name of service: exec cmd (args)
                 let mut servicename: String = String::from("");
                 let mut string: String = String::from("");
-                let mut service: &mut Option<Command> = &mut None;
+                let service: &mut Option<Command> = &mut None;
                 let mut i = 0;
 
                 for c in line.unwrap().chars() {
@@ -72,7 +72,7 @@ pub fn main() {
     use std::process::Command;
     use super::server;
 
-    let mut services: HashMap<String, u32> = HashMap::new();
+    let mut services: HashMap<String, Child> = HashMap::new();
     println!("Lazy init");
 
     let path = Path::new("/etc/lazy.d/init");
