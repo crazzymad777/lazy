@@ -11,7 +11,7 @@ where P: AsRef<Path>, {
 use std::process::{Command, Child};
 use std::collections::HashMap;
 
-fn spawn_service(servicename: String, command: &mut Box<Command>, services: &mut HashMap<String, u32>) {
+fn spawn_service(servicename: String, command: &mut Command, services: &mut HashMap<String, u32>) {
     if let Ok(child) = command.spawn() {
         println!("Lazy: spawn {} {}", servicename, child.id());
         services.insert(servicename, child.id());
@@ -27,7 +27,7 @@ fn parse_init_file<P>(path: P, services: &mut HashMap<String, u32>) where P: AsR
                 // name of service: exec cmd (args)
                 let mut servicename: String = String::from("");
                 let mut string: String = String::from("");
-                let mut service: Box<Command> = Box::new(Command::new(""));
+                let mut service: &mut Option<Command> = &mut None;
                 let mut i = 0;
 
                 for c in line.unwrap().chars() {
@@ -41,10 +41,10 @@ fn parse_init_file<P>(path: P, services: &mut HashMap<String, u32>) where P: AsR
                                 break;
                             }
                         } else if i == 2 {
-                            service = Box::new(Command::new(string));
+                            *service = Some(Command::new(string));
                             string = "".to_string();
                         } else {
-                            service.as_mut().arg(string);
+                            service.as_mut().unwrap().arg(string);
                             string = "".to_string();
                         }
                         i += 1;
@@ -59,7 +59,9 @@ fn parse_init_file<P>(path: P, services: &mut HashMap<String, u32>) where P: AsR
                     //} else {
                     //    println!("Lazy: {} failed", servicename);
                     //}
-                    spawn_service(servicename, &mut service, services);
+                    if service.is_some() {
+                        spawn_service(servicename, &mut service.as_mut().unwrap(), services);
+                    }
                 }
             }
         }
@@ -77,7 +79,7 @@ pub fn main() {
     if path.exists() {
         parse_init_file(path, &mut services);
     } else {
-        Command::new("agetty").arg("tty1").spawn();
+        spawn_service("agetty1".to_string(), &mut Command::new("agetty").arg("tty1"), &mut services);
         Command::new("agetty").arg("tty2").spawn();
         Command::new("agetty").arg("tty3").spawn();
         Command::new("agetty").arg("tty4").spawn();
