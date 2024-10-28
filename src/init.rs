@@ -9,7 +9,6 @@ where P: AsRef<Path>, {
 }
 
 pub fn main() {
-    use std::fs::read_to_string;
     use std::process::Command;
     use super::server;
 
@@ -17,14 +16,44 @@ pub fn main() {
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
-        // for line in read_to_string("/etc/lazy.d/init").unwrap().lines() {
-        //     println!("{}", line.to_string());
-        // }
-
         if let Ok(lines) = read_lines(path) {
             for line in lines {
-                if let Ok(x) = line {
-                    println!("{}", x);
+                if let Ok(ref x) = line {
+                    // name of service: exec cmd (args)
+                    let mut servicename: String = String::from("");
+                    let mut string: String = String::from("");
+                    let mut service: Box<Command> = Box::new(Command::new(""));
+                    let mut i = 0;
+
+                    for c in line.unwrap().chars() {
+                        if c == ':' {
+                            servicename = string;
+                            string = "".to_string();
+                        } else if c ==' ' {
+                            if i == 1 {
+                                if string != "exec" {
+                                    string = "".to_string();
+                                    break;
+                                }
+                            } else if i == 2 {
+                                service = Box::new(Command::new(string));
+                                string = "".to_string();
+                            } else {
+                                service.as_mut().arg(string);
+                                string = "".to_string();
+                            }
+                            i += 1;
+                        } else {
+                            string.push(c);
+                        }
+                    }
+                    if i >= 1 {
+                        if let Ok(child) = service.as_mut().spawn() {
+                            println!("Lazy: spawn {} {}", servicename, child.id());
+                        } else {
+                            println!("Lazy: {} failed", servicename);
+                        }
+                    }
                 }
             }
         }
