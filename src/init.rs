@@ -11,16 +11,41 @@ where P: AsRef<Path>, {
 use std::process::{Command, Child};
 use std::collections::HashMap;
 
-fn spawn_service(servicename: String, command: &mut Command, services: &mut HashMap<String, Child>) {
-    if let Ok(child) = command.spawn() {
-        println!("Lazy: spawn {} {}", servicename, child.id());
-        services.insert(servicename, child);
-    } else {
-        println!("Lazy: {} failed", servicename);
+struct TheOwner {
+    services: HashMap<String, Child>,
+    count: HashMap<String, u32>
+}
+
+impl TheOwner {
+    fn generate_name(&mut self, servicename: String) -> String {
+        let mut string: String = servicename.clone();
+        let option = self.count.get_mut(&string);
+        if option.is_some() {
+             let value = option.unwrap();
+             string = string + &value.to_string();
+             *value = *value+1;
+        } else {
+            self.count.insert(string.clone(), 1);
+        }
+        string
+    }
+
+    fn save(&mut self, servicename: String, child: Child) {
+        self.services.insert(servicename, child);
     }
 }
 
-fn parse_init_file<P>(path: P, services: &mut HashMap<String, Child>) where P: AsRef<Path> {
+fn spawn_service(servicename: String, command: &mut Command, owner: &mut TheOwner) {
+    let name = owner.generate_name(servicename);
+    if let Ok(child) = command.spawn() {
+        println!("Lazy: spawn {} {}", name, child.id());
+        owner.save(name, child);
+    } else {
+        println!("Lazy: {} failed", name);
+    }
+}
+
+fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
     if let Ok(lines) = read_lines(path) {
         for line in lines {
             if let Ok(ref _x) = line {
@@ -35,7 +60,9 @@ fn parse_init_file<P>(path: P, services: &mut HashMap<String, Child>) where P: A
                         servicename = string;
                         string = "".to_string();
                     } else if c ==' ' {
-                        if i == 1 {
+                        if i == 0 {
+
+                        } else if i == 1 {
                             if string != "exec" {
                                 string = "".to_string();
                                 break;
@@ -60,7 +87,7 @@ fn parse_init_file<P>(path: P, services: &mut HashMap<String, Child>) where P: A
                     //    println!("Lazy: {} failed", servicename);
                     //}
                     if service.is_some() {
-                        spawn_service(servicename, &mut service.as_mut().unwrap(), services);
+                        spawn_service(servicename, &mut service.as_mut().unwrap(), owner);
                     }
                 }
             }
@@ -72,20 +99,20 @@ pub fn main() {
     use std::process::Command;
     use super::server;
 
-    let mut services: HashMap<String, Child> = HashMap::new();
+    let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
-        parse_init_file(path, &mut services);
+        parse_init_file(path, &mut the_owner);
     } else {
-        spawn_service("agetty1".to_string(), &mut Command::new("agetty").arg("tty1"), &mut services);
-        spawn_service("agetty2".to_string(), &mut Command::new("agetty").arg("tty2"), &mut services);
-        spawn_service("agetty3".to_string(), &mut Command::new("agetty").arg("tty3"), &mut services);
-        spawn_service("agetty4".to_string(), &mut Command::new("agetty").arg("tty4"), &mut services);
-        spawn_service("agetty5".to_string(), &mut Command::new("agetty").arg("tty5"), &mut services);
-        spawn_service("agetty6".to_string(), &mut Command::new("agetty").arg("tty6"), &mut services);
-        spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon"), &mut services);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty1"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty2"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty3"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty4"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty5"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty6"), &mut the_owner);
+        spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon"), &mut the_owner);
     }
 
     server::main();
