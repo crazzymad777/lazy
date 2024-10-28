@@ -52,7 +52,7 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                 // name of service: exec cmd (args)
                 let mut servicename: String = String::from("");
                 let mut string: String = String::from("");
-                let service: &mut Option<Command> = &mut None;
+                let mut service: Option<Command> = None;
                 let mut i = 0;
 
                 for c in line.unwrap().chars() {
@@ -61,31 +61,22 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                         string = "".to_string();
                     } else if c ==' ' {
                         if i == 0 {
-
-                        } else if i == 1 {
-                            if string != "exec" {
-                                string = "".to_string();
-                                break;
+                            if string == "exec" {
+                                i += 1;
                             }
-                        } else if i == 2 {
-                            *service = Some(Command::new(string));
-                            string = "".to_string();
+                        } else if i == 1 {
+                            service = Some(Command::new(string));
+                            i += 1;
                         } else {
                             service.as_mut().unwrap().arg(string);
-                            string = "".to_string();
+                            i += 1;
                         }
-                        i += 1;
+                        string = "".to_string();
                     } else {
                         string.push(c);
                     }
                 }
                 if i >= 1 {
-                    //if let Ok(child) = service.as_mut().spawn() {
-                    //    println!("Lazy: spawn {} {}", servicename, child.id());
-                    //    services.insert(servicename, child.id());
-                    //} else {
-                    //    println!("Lazy: {} failed", servicename);
-                    //}
                     if service.is_some() {
                         spawn_service(servicename, &mut service.as_mut().unwrap(), owner);
                     }
