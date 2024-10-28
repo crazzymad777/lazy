@@ -63,6 +63,7 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                         break;
                     }
                     if x == ' ' {
+                        i = 0;
                         break;
                     }
                     memory.push(x);
