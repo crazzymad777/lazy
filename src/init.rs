@@ -50,35 +50,63 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
         for line in lines {
             if let Ok(ref _x) = line {
                 // name of service: exec cmd (args)
-                let mut servicename: String = String::from("");
-                let mut string: String = String::from("");
-                let mut service: Option<Command> = None;
-                let mut i = 0;
 
-                for c in line.unwrap().chars() {
-                    if c == ':' {
-                        servicename = string;
-                        string = "".to_string();
-                    } else if c ==' ' {
-                        if i == 0 {
-                            if string == "exec" {
-                                i += 1;
-                            }
-                        } else if i == 1 {
-                            service = Some(Command::new(string));
-                            i += 1;
-                        } else {
-                            service.as_mut().unwrap().arg(string);
-                            i += 1;
-                        }
-                        string = "".to_string();
-                    } else {
-                        string.push(c);
+                // The Worst Parser Ever
+                let mut servicename = String::from("unit");
+                let mut memory = String::from("");
+                let string = line.unwrap();
+                let mut i = 0;
+                for x in string.chars() {
+                    i += 1;
+                    if (x == ':') {
+                        servicename = memory.clone();
+                        break;
                     }
+                    if (x == ' ') {
+                        break;
+                    }
+                    memory.push(x);
                 }
-                if i >= 1 {
-                    if service.is_some() {
-                        spawn_service(servicename, &mut service.as_mut().unwrap(), owner);
+
+                memory = String::from("");
+                let mut j = 0;
+                //println!("servicename: {}", servicename);
+                for x in string.chars() {
+                    j += 1;
+                    if j > i {
+                        if x == ' ' {
+                            if memory == "" {
+
+                            } else if memory == "exec" {
+
+                            } else {
+                                //println!("command: {}", memory);
+                                let mut service = Command::new(memory);
+                                memory = String::from("");
+                                let mut k = 0;
+                                for y in string.chars() {
+                                    k += 1;
+                                    if k > j {
+                                        if y == ' ' {
+                                            //println!("load arg: {}", memory);
+                                            service.arg(memory);
+                                            memory = String::from("");
+                                        } else {
+                                            memory.push(y);
+                                        }
+                                    }
+                                }
+                                if memory != "" {
+                                    //println!("load arg: {}", memory);
+                                    service.arg(memory);
+                                }
+                                spawn_service(servicename, &mut service, owner);
+                                break;
+                            }
+                            memory = String::from("");
+                            continue;
+                        }
+                        memory.push(x);
                     }
                 }
             }
