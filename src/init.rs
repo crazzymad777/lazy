@@ -8,12 +8,19 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
-fn parse_init_file<P>(path: P) where P: AsRef<Path> {
-    use std::collections::HashMap;
-    use std::process::{Command, Child};
+use std::process::{Command, Child};
+use std::collections::HashMap;
 
-    let mut services: HashMap<String, u32> = HashMap::new();
+fn spawn_service(servicename: String, command: &mut Box<Command>, services: &mut HashMap<String, u32>) {
+    if let Ok(child) = command.spawn() {
+        println!("Lazy: spawn {} {}", servicename, child.id());
+        services.insert(servicename, child.id());
+    } else {
+        println!("Lazy: {} failed", servicename);
+    }
+}
 
+fn parse_init_file<P>(path: P, services: &mut HashMap<String, u32>) where P: AsRef<Path> {
     if let Ok(lines) = read_lines(path) {
         for line in lines {
             if let Ok(ref x) = line {
@@ -46,12 +53,13 @@ fn parse_init_file<P>(path: P) where P: AsRef<Path> {
                     }
                 }
                 if i >= 1 {
-                    if let Ok(child) = service.as_mut().spawn() {
-                        println!("Lazy: spawn {} {}", servicename, child.id());
-                        services.insert(servicename, child.id());
-                    } else {
-                        println!("Lazy: {} failed", servicename);
-                    }
+                    //if let Ok(child) = service.as_mut().spawn() {
+                    //    println!("Lazy: spawn {} {}", servicename, child.id());
+                    //    services.insert(servicename, child.id());
+                    //} else {
+                    //    println!("Lazy: {} failed", servicename);
+                    //}
+                    spawn_service(servicename, &mut service, services);
                 }
             }
         }
@@ -62,11 +70,12 @@ pub fn main() {
     use std::process::Command;
     use super::server;
 
+    let mut services: HashMap<String, u32> = HashMap::new();
     println!("Lazy init");
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
-        parse_init_file(path);
+        parse_init_file(path, &mut services);
     } else {
         Command::new("agetty").arg("tty1").spawn();
         Command::new("agetty").arg("tty2").spawn();
