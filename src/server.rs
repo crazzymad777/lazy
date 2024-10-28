@@ -19,12 +19,13 @@ pub fn main() -> std::io::Result<()> {
 	for stream in listener.incoming() {
 		match stream {
 		    Ok(stream) => {
-			/* connection succeeded */
-			thread::spawn(|| handle_client(stream));
+				/* connection succeeded */
+				thread::spawn(|| handle_client(stream));
 		    }
 		    Err(err) => {
-			/* connection failed */
-			break;
+				/* connection failed */
+				eprintln!("Lazie Error: {}", err);
+				break;
 		    }
 		}
 	}

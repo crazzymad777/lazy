@@ -7,9 +7,9 @@ fn main() {
     use std::process;
 
     if process::id() == 1 {
-        init::main();
+        let _ = init::main();
     } else {
-        client::lazycmd();
+        let _ = client::lazycmd();
     }
 }
 

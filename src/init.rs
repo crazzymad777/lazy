@@ -58,11 +58,11 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                 let mut i = 0;
                 for x in string.chars() {
                     i += 1;
-                    if (x == ':') {
+                    if x == ':' {
                         servicename = memory.clone();
                         break;
                     }
-                    if (x == ' ') {
+                    if x == ' ' {
                         break;
                     }
                     memory.push(x);
@@ -134,6 +134,6 @@ pub fn main() {
         spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon"), &mut the_owner);
     }
 
-    server::main();
+    let _ = server::main();
 }
 
