@@ -80,12 +80,12 @@ pub fn main() {
         parse_init_file(path, &mut services);
     } else {
         spawn_service("agetty1".to_string(), &mut Command::new("agetty").arg("tty1"), &mut services);
-        Command::new("agetty").arg("tty2").spawn();
-        Command::new("agetty").arg("tty3").spawn();
-        Command::new("agetty").arg("tty4").spawn();
-        Command::new("agetty").arg("tty5").spawn();
-        Command::new("agetty").arg("tty6").spawn();
-        Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").spawn();
+        spawn_service("agetty2".to_string(), &mut Command::new("agetty").arg("tty2"), &mut services);
+        spawn_service("agetty3".to_string(), &mut Command::new("agetty").arg("tty3"), &mut services);
+        spawn_service("agetty4".to_string(), &mut Command::new("agetty").arg("tty4"), &mut services);
+        spawn_service("agetty5".to_string(), &mut Command::new("agetty").arg("tty5"), &mut services);
+        spawn_service("agetty6".to_string(), &mut Command::new("agetty").arg("tty6"), &mut services);
+        spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon"), &mut services);
     }
 
     server::main();
