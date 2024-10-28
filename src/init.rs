@@ -8,6 +8,56 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
+fn parse_init_file<P>(path: P) where P: AsRef<Path> {
+    use std::collections::HashMap;
+    use std::process::{Command, Child};
+
+    let mut services: HashMap<String, u32> = HashMap::new();
+
+    if let Ok(lines) = read_lines(path) {
+        for line in lines {
+            if let Ok(ref x) = line {
+                // name of service: exec cmd (args)
+                let mut servicename: String = String::from("");
+                let mut string: String = String::from("");
+                let mut service: Box<Command> = Box::new(Command::new(""));
+                let mut i = 0;
+
+                for c in line.unwrap().chars() {
+                    if c == ':' {
+                        servicename = string;
+                        string = "".to_string();
+                    } else if c ==' ' {
+                        if i == 1 {
+                            if string != "exec" {
+                                string = "".to_string();
+                                break;
+                            }
+                        } else if i == 2 {
+                            service = Box::new(Command::new(string));
+                            string = "".to_string();
+                        } else {
+                            service.as_mut().arg(string);
+                            string = "".to_string();
+                        }
+                        i += 1;
+                    } else {
+                        string.push(c);
+                    }
+                }
+                if i >= 1 {
+                    if let Ok(child) = service.as_mut().spawn() {
+                        println!("Lazy: spawn {} {}", servicename, child.id());
+                        services.insert(servicename, child.id());
+                    } else {
+                        println!("Lazy: {} failed", servicename);
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub fn main() {
     use std::process::Command;
     use super::server;
@@ -16,47 +66,7 @@ pub fn main() {
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
-        if let Ok(lines) = read_lines(path) {
-            for line in lines {
-                if let Ok(ref x) = line {
-                    // name of service: exec cmd (args)
-                    let mut servicename: String = String::from("");
-                    let mut string: String = String::from("");
-                    let mut service: Box<Command> = Box::new(Command::new(""));
-                    let mut i = 0;
-
-                    for c in line.unwrap().chars() {
-                        if c == ':' {
-                            servicename = string;
-                            string = "".to_string();
-                        } else if c ==' ' {
-                            if i == 1 {
-                                if string != "exec" {
-                                    string = "".to_string();
-                                    break;
-                                }
-                            } else if i == 2 {
-                                service = Box::new(Command::new(string));
-                                string = "".to_string();
-                            } else {
-                                service.as_mut().arg(string);
-                                string = "".to_string();
-                            }
-                            i += 1;
-                        } else {
-                            string.push(c);
-                        }
-                    }
-                    if i >= 1 {
-                        if let Ok(child) = service.as_mut().spawn() {
-                            println!("Lazy: spawn {} {}", servicename, child.id());
-                        } else {
-                            println!("Lazy: {} failed", servicename);
-                        }
-                    }
-                }
-            }
-        }
+        parse_init_file(path);
     } else {
         Command::new("agetty").arg("tty1").spawn();
         Command::new("agetty").arg("tty2").spawn();
