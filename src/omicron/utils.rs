@@ -11,7 +11,7 @@ pub trait Cstr {
         unimplemented!();
     }
 
-    // return pointer to null terminated string or panic
+    // return pointer to zero terminated string or panic
     // Really magic!
     fn new_magic(self) -> *const i8 where Self: Sized {
         self.check().ok().unwrap().magic()
