@@ -49,3 +49,7 @@ pub fn mount_fstab() {
         eprintln!("Lazy mount failed: {}", e);
     }
 }
+
+pub fn disable_nologin() {
+    std::fs::remove_file("/run/nologin");
+}

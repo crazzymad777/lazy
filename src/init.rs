@@ -127,13 +127,14 @@ pub fn main() {
     use command_group::CommandGroup;
     use std::process::Command;
     use super::server;
-    use crate::sys::{provide_hostname, mount_fstab};
+    use crate::sys::{provide_hostname, mount_fstab, disable_nologin};
 
     let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");
     //init_mount();
     provide_hostname();
     mount_fstab();
+    disable_nologin();
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
@@ -145,7 +146,7 @@ pub fn main() {
         spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty4").group(), &mut the_owner);
         spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty5").group(), &mut the_owner);
         spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty6").group(), &mut the_owner);
-        spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").group(), &mut the_owner);
+        //spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").group(), &mut the_owner);
     }
 
     let _ = server::main();
