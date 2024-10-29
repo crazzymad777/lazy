@@ -121,12 +121,13 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
 pub fn main() {
     use std::process::Command;
     use super::server;
-    use crate::sys::{init_mount, provide_hostname};
+    use crate::sys::{init_mount, provide_hostname, mount_fstab};
 
     let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");
     init_mount();
     provide_hostname();
+    mount_fstab();
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {

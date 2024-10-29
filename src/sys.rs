@@ -40,3 +40,11 @@ pub fn init_mount() {
     mount_vfs("devpts", "devpts", "/dev/pts", "mode=0620,gid=5,nosuid,noexec");
     mount_vfs("tmpfs", "shm", "/dev/shm", "mode=1777,nosuid,nodev");
 }
+
+pub fn mount_fstab() {
+    use std::process::Command;
+    println!("Mount all");
+    if let Err(e) = Command::new("mount").arg("-a").spawn() {
+        eprintln!("Lazy mount failed: {}", e);
+    }
+}
