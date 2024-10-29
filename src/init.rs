@@ -8,11 +8,12 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
-use std::process::{Command, Child};
+use command_group::GroupChild;
+use std::process::Command;
 use std::collections::HashMap;
 
 struct TheOwner {
-    services: HashMap<String, Child>,
+    services: HashMap<String, GroupChild>,
     count: HashMap<String, u32>
 }
 
@@ -30,12 +31,14 @@ impl TheOwner {
         string
     }
 
-    fn save(&mut self, servicename: String, child: Child) {
+    fn save(&mut self, servicename: String, child: GroupChild) {
         self.services.insert(servicename, child);
     }
 }
 
-fn spawn_service(servicename: String, command: &mut Command, owner: &mut TheOwner) {
+use command_group::builder::CommandGroupBuilder;
+
+fn spawn_service(servicename: String, command: &mut CommandGroupBuilder<'_, Command>, owner: &mut TheOwner) {
     let name = owner.generate_name(servicename);
     if let Ok(child) = command.spawn() {
         println!("Lazy: spawn {} {}", name, child.id());
@@ -46,6 +49,8 @@ fn spawn_service(servicename: String, command: &mut Command, owner: &mut TheOwne
 }
 
 fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
+    use command_group::CommandGroup;
+
     if let Ok(lines) = read_lines(path) {
         for line in lines {
             if let Ok(ref _x) = line {
@@ -104,7 +109,7 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                                     //println!("load arg: {}", memory);
                                     service.arg(memory);
                                 }
-                                spawn_service(servicename, &mut service, owner);
+                                spawn_service(servicename, &mut service.group(), owner);
                                 break;
                             }
                             memory = String::from("");
@@ -119,6 +124,7 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
 }
 
 pub fn main() {
+    use command_group::CommandGroup;
     use std::process::Command;
     use super::server;
     use crate::sys::{init_mount, provide_hostname, mount_fstab};
@@ -133,13 +139,13 @@ pub fn main() {
     if path.exists() {
         parse_init_file(path, &mut the_owner);
     } else {
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty1"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty2"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty3"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty4"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty5"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty6"), &mut the_owner);
-        spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty1").group(), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty2").group(), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty3").group(), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty4").group(), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty5").group(), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty6").group(), &mut the_owner);
+        spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").group(), &mut the_owner);
     }
 
     let _ = server::main();
