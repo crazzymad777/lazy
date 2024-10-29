@@ -3,30 +3,14 @@
 version = 3
 
 [[package]]
-name = "cc"
-version = "1.0.73"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
-
-[[package]]
 name = "lazy"
 version = "0.1.0"
 dependencies = [
- "syscalls",
+ "libc",
 ]
 
 [[package]]
-name = "paste"
-version = "1.0.6"
+name = "libc"
+version = "0.2.161"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
-
-[[package]]
-name = "syscalls"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a837f64f72473acde47fbd13431e83fc9081e52ae49ea1430003831536ed04d7"
-dependencies = [
- "cc",
- "paste",
-]
+checksum = "8e9489c2807c139ffd9c1794f4af0ebe86a828db53ecdc7fea2111d0fed085d1"

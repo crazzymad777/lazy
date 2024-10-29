@@ -7,7 +7,7 @@ license = "GPL-3.0-only"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-syscalls = "0.5.0"
+libc = "0.2.161"
 
 [profile.release]
 opt-level = "s"
