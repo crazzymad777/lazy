@@ -8,7 +8,7 @@ pub trait Cstr {
     }
 
     fn magic(self) -> *const i8 where Self: Sized {
-         unimplemented!();
+        unimplemented!();
     }
 
     // return pointer to null terminated string or panic
@@ -23,7 +23,7 @@ impl Cstr for &str {
         if self.chars().next_back().unwrap() == '\0' {
             Ok(self)
         } else {
-            Err("Not Zero-Terminated String")
+            Err("Last Character of String Is Not Zero")
         }
     }
 
