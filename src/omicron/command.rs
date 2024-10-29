@@ -1,18 +1,17 @@
-pub struct CommandBuilder {
+pub struct CommandBuilder<'a> {
+    program: &'a str
 }
 
-impl CommandBuilder {
+impl CommandBuilder<'_> {
     pub fn new(program: &str) -> CommandBuilder {
-        CommandBuilder {}
+        CommandBuilder {program}
     }
 
     pub fn spawn(&mut self) {
         // Something like that.....
         use crate::omicron::utils::Cstr;
-        let s = Cstr::check("sh\0");
-        let x = s.unwrap();
         unsafe {
-            libc::execv(Cstr::magic(x), std::ptr::null());
+            libc::execv(Cstr::new_magic("sh\0"), std::ptr::null());
         }
     }
 }

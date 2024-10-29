@@ -1,5 +1,5 @@
 // Use just CString???
-// Probably best way is to constuct zero terminated &str
+// Probably best way is to construct zero terminated &str
 // And validate that
 
 pub trait Cstr {
@@ -8,7 +8,13 @@ pub trait Cstr {
     }
 
     fn magic(self) -> *const i8 where Self: Sized {
-        unimplemented!();
+         unimplemented!();
+    }
+
+    // return pointer to null terminated string or panic
+    // Really magic!
+    fn new_magic(self) -> *const i8 where Self: Sized {
+        self.check().ok().unwrap().magic()
     }
 }
 
@@ -25,6 +31,7 @@ impl Cstr for &str {
         return self.as_ptr() as *const i8;
     }
 }
+
 
 // How to build array of strings?
 // const char *argv[]
