@@ -124,10 +124,13 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
 }
 
 pub fn main() {
+    use crate::omicron::command::CommandBuilder;
     use command_group::CommandGroup;
     use std::process::Command;
     use super::server;
     use crate::sys::{provide_hostname, mount_fstab, disable_nologin};
+
+    CommandBuilder::new("shell");
 
     let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");

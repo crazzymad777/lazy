@@ -51,5 +51,5 @@ pub fn mount_fstab() {
 }
 
 pub fn disable_nologin() {
-    std::fs::remove_file("/run/nologin");
+    let _ = std::fs::remove_file("/run/nologin");
 }
