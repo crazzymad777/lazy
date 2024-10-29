@@ -50,6 +50,9 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
         for line in lines {
             if let Ok(ref _x) = line {
                 // name of service: exec cmd (args)
+                // +mount
+                // +hostname
+                //
 
                 // The Worst Parser Ever
                 let mut servicename = String::from("unit");
@@ -121,6 +124,11 @@ pub fn main() {
 
     let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");
+
+    let data = std::fs::read("/etc/hostname").ok();
+    if data.is_some() {
+        let _ = std::fs::write("/proc/sys/kernel/hostname", data.unwrap());
+    }
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
