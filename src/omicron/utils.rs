@@ -2,18 +2,20 @@
 // Probably best way is to construct zero terminated &str
 // And validate that
 
+use libc::c_char;
+
 pub trait Cstr {
     fn check(self) -> Result<Self, &'static str> where Self: Sized {
         unimplemented!();
     }
 
-    fn magic(self) -> *const i8 where Self: Sized {
+    fn magic(self) -> *const c_char where Self: Sized {
         unimplemented!();
     }
 
     // return pointer to zero terminated string or panic
     // Really magic!
-    fn new_magic(self) -> *const i8 where Self: Sized {
+    fn new_magic(self) -> *const c_char where Self: Sized {
         self.check().ok().unwrap().magic()
     }
 }
@@ -27,8 +29,8 @@ impl Cstr for &str {
         }
     }
 
-    fn magic(self) -> *const i8 where Self: Sized {
-        return self.as_ptr() as *const i8;
+    fn magic(self) -> *const c_char where Self: Sized {
+        return self.as_ptr() as *const c_char;
     }
 }
 
