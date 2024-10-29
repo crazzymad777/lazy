@@ -5,7 +5,7 @@ pub fn reboot(response: String) {
         use libc::reboot;
         let cmd = match response.as_str() {
             "poweroff" => libc::RB_POWER_OFF,
-            "restart" => libc::RB_AUTOBOOT,
+            "reboot" => libc::RB_AUTOBOOT,
             "halt" => libc::RB_HALT_SYSTEM,
             &_ => todo!()
         };
@@ -43,8 +43,9 @@ pub fn init_mount() {
 
 pub fn mount_fstab() {
     use std::process::Command;
+    // remount all
     println!("Mount all");
-    if let Err(e) = Command::new("mount").arg("-a").spawn() {
+    if let Err(e) = Command::new("mount").arg("-o").arg("remount").arg("-a").spawn() {
         eprintln!("Lazy mount failed: {}", e);
     }
 }

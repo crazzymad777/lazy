@@ -127,11 +127,11 @@ pub fn main() {
     use command_group::CommandGroup;
     use std::process::Command;
     use super::server;
-    use crate::sys::{init_mount, provide_hostname, mount_fstab};
+    use crate::sys::{provide_hostname, mount_fstab};
 
     let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");
-    init_mount();
+    //init_mount();
     provide_hostname();
     mount_fstab();
 
