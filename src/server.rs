@@ -6,7 +6,7 @@ fn handle_client(mut stream: UnixStream) -> std::io::Result<()> {
     use std::io::Read;
     let mut response = String::new();
     stream.read_to_string(&mut response)?;
-    if response == "poweroff" || response == "halt" || response == "restart" {
+    if response == "poweroff" || response == "halt" || response == "reboot" {
         sys::reboot(response);
     }
     Ok(())
