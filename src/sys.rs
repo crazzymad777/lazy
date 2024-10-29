@@ -1,16 +1,6 @@
+// Here OS calls / OS-specific calls
+
 pub fn reboot(response: String) {
- //    unsafe {
- //        use syscalls::syscall;
-	// let cmd = match response.as_str() {
- //            "poweroff" => 0x4321fedcusize,
- //            "restart" => 0x01234567usize,
- //            "halt" => 0xcdef0123usize,
-	//     &_ => todo!()
-	// };
- //        if let Err(e) = syscall(syscalls::SYS_reboot, &syscalls::SyscallArgs::from(&[0xfee1dead, 537993216, cmd])) {
- //            println!("{}", e);
- //        }
- //    }
     unsafe {
         use libc::reboot;
         let cmd = match response.as_str() {
@@ -23,3 +13,30 @@ pub fn reboot(response: String) {
     }
 }
 
+pub fn provide_hostname() {
+    let data = std::fs::read("/etc/hostname").ok();
+    if data.is_some() {
+        let _ = std::fs::write("/proc/sys/kernel/hostname", data.unwrap());
+    }
+}
+
+use std::ffi::OsStr;
+fn mount_vfs<S: AsRef<OsStr>>(typefs: S, device: S, dir: S, options: S) {
+    use std::process::Command;
+    use std::path::Path;
+    let _ = std::fs::create_dir(Path::new(&dir));
+    if let Err(e) = Command::new("mount").arg("-t").arg(typefs).arg(device).arg(dir).arg("-o").arg(options).spawn() {
+        eprintln!("Lazy mount failed: {}", e);
+    }
+}
+
+pub fn init_mount() {
+    // virtual file-systems
+    println!("Mount virtual file-systems");
+    mount_vfs("proc", "proc", "/proc", "nosuid,noexec,nodev");
+    mount_vfs("sysfs", "sys", "/sys", "nosuid,noexec,nodev");
+    mount_vfs("tmpfs", "run", "/run", "mode=0755,nosuid,nodev");
+    mount_vfs("devtmpfs", "dev", "/dev", "mode=0755,nosuid");
+    mount_vfs("devpts", "devpts", "/dev/pts", "mode=0620,gid=5,nosuid,noexec");
+    mount_vfs("tmpfs", "shm", "/dev/shm", "mode=1777,nosuid,nodev");
+}

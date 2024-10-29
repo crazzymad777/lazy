@@ -118,35 +118,15 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
     }
 }
 
-use std::ffi::OsStr;
-fn mount_vfs<S: AsRef<OsStr>>(typefs: S, device: S, dir: S, options: S) {
-    use std::process::Command;
-    let _ = std::fs::create_dir(Path::new(&dir));
-    if let Err(e) = Command::new("mount").arg("-t").arg(typefs).arg(device).arg(dir).arg("-o").arg(options).spawn() {
-        eprintln!("Lazy mount failed: {}", e);
-    }
-}
-
 pub fn main() {
     use std::process::Command;
     use super::server;
+    use crate::sys::{init_mount, provide_hostname};
 
     let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");
-
-    // virtual file-systems
-    println!("Mount virtual file-systems");
-    mount_vfs("proc", "proc", "/proc", "nosuid,noexec,nodev");
-    mount_vfs("sysfs", "sys", "/sys", "nosuid,noexec,nodev");
-    mount_vfs("tmpfs", "run", "/run", "mode=0755,nosuid,nodev");
-    mount_vfs("devtmpfs", "dev", "/dev", "mode=0755,nosuid");
-    mount_vfs("devpts", "devpts", "/dev/pts", "mode=0620,gid=5,nosuid,noexec");
-    mount_vfs("tmpfs", "shm", "/dev/shm", "mode=1777,nosuid,nodev");
-
-    let data = std::fs::read("/etc/hostname").ok();
-    if data.is_some() {
-        let _ = std::fs::write("/proc/sys/kernel/hostname", data.unwrap());
-    }
+    init_mount();
+    provide_hostname();
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
