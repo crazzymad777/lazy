@@ -1,3 +1,4 @@
+use crate::unit::UnitDescriptor;
 use std::collections::HashMap;
 use crate::omicron::Process;
 
@@ -26,5 +27,15 @@ impl Warden {
 
     pub fn save(&mut self, servicename: String, child: Process) {
         self.services.insert(servicename, child);
+    }
+
+    pub fn spawn_supervised(&mut self, descriptor: &UnitDescriptor) {
+        let name = self.generate_name(descriptor.get_name());
+        if let Ok(child) = descriptor.spawn() {
+            println!("Lazie Warden: spawn {} {}", name, child.id());
+            self.save(name, child);
+        } else {
+            println!("Lazie Warden: {} failed", name);
+        }
     }
 }

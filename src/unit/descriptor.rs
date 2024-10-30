@@ -1,4 +1,5 @@
 use crate::omicron::command::CommandBuilder;
+use crate::omicron::Process;
 
 pub struct UnitDescriptor {
     original_name: String,
@@ -10,15 +11,11 @@ impl UnitDescriptor {
         UnitDescriptor {original_name: String::from(name), image}
     }
 
-    pub fn get_name(self) -> &str {
-        self.original_name.as_str()
+    pub fn get_name(&self) -> String {
+        self.original_name.clone()
     }
 
-    pub fn get_builder(self) -> CommandBuilder {
-        self.image
-    }
-
-    pub fn spawn() {
-
+    pub fn spawn(&self) -> Result<Process, String> {
+        self.image.spawn()
     }
 }
