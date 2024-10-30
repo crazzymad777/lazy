@@ -22,25 +22,25 @@ impl CommandBuilder<'_> {
     }
 
     pub fn spawn(&mut self) -> Result<libc::pid_t, String> {
+        use crate::omicron::utils::errno_to_string;
         use crate::omicron::utils::Cstr;
         use libc::c_char;
+
         unsafe {
             let result = libc::fork();
-            if result == 0 {
-                libc::execv(Cstr::magic(self.program), std::ptr::null());
-                // never reached
-            } else if result == -1 {
-                let buffer: [u8; 256] = [0; 256];
-                let pointer = buffer.as_ptr() as *mut c_char;
-                let current_error = *libc::__errno_location();
 
-                if libc::strerror_r(current_error, pointer, 256) == 0 {
-                    let e = std::str::from_utf8(buffer.as_slice());
-                    return Err(String::from(e.unwrap_or("fork failed")));
+            if result != 0 {
+                return if result > 0 {
+                    Ok(result)
+                } else {
+                    // result < 0
+                    Err(errno_to_string().unwrap_or("fork failed".to_string()))
                 }
-                return Err(String::from("fork failed"));
             }
-            return Ok(result);
+
+            // result = 0
+            let error = libc::execv(Cstr::magic(self.program), std::ptr::null());
+            panic!("execv failed: {}", errno_to_string().unwrap_or("execv failed".to_string())) // child panic
         }
     }
 }
