@@ -36,7 +36,7 @@ impl TheOwner {
     }
 }
 
-fn spawn_service(servicename: String, command: &mut CommandBuilder<'_>, owner: &mut TheOwner) {
+fn spawn_service(servicename: String, command: &mut CommandBuilder, owner: &mut TheOwner) {
     let name = owner.generate_name(servicename);
     if let Ok(child) = command.group().spawn() {
         println!("Lazy: spawn {} {}", name, child.id());
@@ -90,7 +90,9 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                                 //println!("command: {}", memory);
                                 program_name = memory.clone();
                                 program_name.push('\0');
-                                let mut service = CommandBuilder::new(&program_name);
+                                let mut service = CommandBuilder::new();
+                                service.program(&program_name);
+
                                 memory = String::from("");
                                 let mut k = 0;
                                 for y in string.chars() {
@@ -140,12 +142,12 @@ pub fn main() {
     if path.exists() {
         parse_init_file(path, &mut the_owner);
     } else {
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty\0").arg("tty1\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty\0").arg("tty2\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty\0").arg("tty3\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty\0").arg("tty4\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty\0").arg("tty5\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty\0").arg("tty6\0"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty1\0"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty2\0"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty3\0"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty4\0"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty5\0"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty6\0"), &mut the_owner);
         //spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").group(), &mut the_owner);
     }
 

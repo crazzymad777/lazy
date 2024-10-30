@@ -1,13 +1,18 @@
 // Any &str passed to CommandBuilder must be checked
-impl CommandBuilder<'_> {
-    pub fn new(program: &str) -> CommandBuilder {
-        use crate::omicron::utils::Cstr;
-        Cstr::check(program).unwrap();
+impl CommandBuilder {
+    pub fn new() -> CommandBuilder {
         CommandBuilder {
-            program,
+            program: String::from(""),
             args: Vec::new(),
             new_group: false
         }
+    }
+
+    pub fn program(&mut self, program: &str) -> &mut Self {
+        use crate::omicron::utils::Cstr;
+        Cstr::check(program).unwrap();
+        self.program = String::from(program);
+        self
     }
 
     // fn make_command for all arguments...
@@ -59,7 +64,7 @@ impl CommandBuilder<'_> {
             // result = 0
             let l = self.args.len();
             let mut args: Vec<*const i8> = Vec::with_capacity(l+2);
-            let file = Cstr::magic(self.program);
+            let file = Cstr::magic(self.program.as_str());
             args.push(file); // provide filename of programs as first argument
 
             let mut i = 0;
@@ -77,8 +82,8 @@ impl CommandBuilder<'_> {
 }
 
 // &str can be stored in struct if and only if when it was checked
-pub struct CommandBuilder<'a> {
-    program: &'a str,
+pub struct CommandBuilder {
+    program: String,
     args: Vec<String>,
     new_group: bool
 }
