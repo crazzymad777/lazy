@@ -21,10 +21,26 @@ impl CommandBuilder<'_> {
         self
     }
 
-    pub fn spawn(&mut self) {
+    pub fn spawn(&mut self) -> Result<libc::pid_t, String> {
         use crate::omicron::utils::Cstr;
+        use libc::c_char;
         unsafe {
-            libc::execv(Cstr::magic(self.program), std::ptr::null());
+            let result = libc::fork();
+            if result == 0 {
+                libc::execv(Cstr::magic(self.program), std::ptr::null());
+                // never reached
+            } else if result == -1 {
+                let buffer: [u8; 256] = [0; 256];
+                let pointer = buffer.as_ptr() as *mut c_char;
+                let current_error = *libc::__errno_location();
+
+                if libc::strerror_r(current_error, pointer, 256) == 0 {
+                    let e = std::str::from_utf8(buffer.as_slice());
+                    return Err(String::from(e.unwrap_or("fork failed")));
+                }
+                return Err(String::from("fork failed"));
+            }
+            return Ok(result);
         }
     }
 }
