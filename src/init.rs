@@ -38,7 +38,7 @@ impl TheOwner {
 
 fn spawn_service(servicename: String, command: &mut CommandBuilder<'_>, owner: &mut TheOwner) {
     let name = owner.generate_name(servicename);
-    if let Ok(child) = command.spawn() {
+    if let Ok(child) = command.group().spawn() {
         println!("Lazy: spawn {} {}", name, child.id());
         owner.save(name, child);
     } else {

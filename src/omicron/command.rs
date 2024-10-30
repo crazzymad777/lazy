@@ -6,13 +6,14 @@ impl CommandBuilder<'_> {
         CommandBuilder {
             program,
             args: Vec::new(),
+            new_group: false
         }
     }
 
-    // pub fn group(&mut self) -> &mut Self {
-    //     self.new_group = true;
-    //     self
-    // }
+    pub fn group(&mut self) -> &mut Self {
+        self.new_group = true;
+        self
+    }
 
     pub fn arg(&mut self, argument: &str) -> &mut Self {
         crate::omicron::utils::Cstr::check(argument).unwrap();
@@ -35,6 +36,10 @@ impl CommandBuilder<'_> {
                     // result < 0
                     Err(errno_to_string().unwrap_or("fork failed".to_string()))
                 }
+            }
+
+            if self.new_group {
+                libc::setsid();
             }
 
             // result = 0
@@ -60,20 +65,20 @@ impl CommandBuilder<'_> {
 // &str can be stored in struct if and only if when it was checked
 pub struct CommandBuilder<'a> {
     program: &'a str,
-    args: Vec<String>
+    args: Vec<String>,
+    new_group: bool
 }
 
 #[derive(Copy, Clone)]
 pub struct Process {
-    id: libc::pid_t,
-    pgid: libc::pid_t
+    id: libc::pid_t
 }
 
 impl Process {
     fn new(id: libc::pid_t) -> Process {
         unsafe {
-            let pgid = libc::getpgid(id);
-            Process {id, pgid}
+            //let pgid = libc::getpgid(id);
+            Process {id}
         }
     }
 
@@ -86,17 +91,6 @@ impl Process {
         unsafe {
             if libc::kill(self.id, signal) == -1 {
                 Err(errno_to_string().unwrap_or("kill failed".to_string()))
-            } else {
-                Ok(())
-            }
-        }
-    }
-
-    pub fn signal_group(self: Process, signal: i32) -> Result<(), String> {
-        use crate::omicron::utils::errno_to_string;
-        unsafe {
-            if libc::killpg(self.pgid, signal) == -1 {
-                Err(errno_to_string().unwrap_or("killpg failed".to_string()))
             } else {
                 Ok(())
             }
