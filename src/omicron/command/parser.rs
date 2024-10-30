@@ -1,5 +1,4 @@
 use crate::omicron::command::CommandBuilder;
-use crate::omicron::command;
 
 pub struct CommandParser {
     memory: String, // use raw bytes?

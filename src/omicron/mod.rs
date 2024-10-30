@@ -34,9 +34,9 @@ impl Process {
 }
 
 #[cfg(test)]
-mod testsCstr {
+mod tests_cstr {
     use crate::omicron::utils::Cstr;
-    use super::*;
+    
 
     #[test]
     #[should_panic]

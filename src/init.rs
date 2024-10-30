@@ -58,7 +58,7 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                 // The Worst Parser Ever
                 let mut servicename = String::from("unit");
                 let mut memory = String::from("");
-                let mut program_name: String = String::from("");
+                let program_name: String = String::from("");
 
                 let string = line.unwrap();
                 let mut i = 0;
