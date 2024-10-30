@@ -80,8 +80,8 @@ mod tests {
 
     #[test]
     fn test_builder_args() {
-        let expected = "play;world,research,game;false";
-        let actual = CommandBuilder::new().program("play").arg("world").arg("research").arg("game").to_string();
+        let expected = "play\0;world\0,research\0,game\0,;false";
+        let actual = CommandBuilder::new().program("play\0").arg("world\0").arg("research\0").arg("game\0").to_string();
         assert_eq!(expected, actual);
     }
 }
