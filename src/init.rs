@@ -87,33 +87,16 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                             } else if memory == "exec" {
 
                             } else {
-                                //println!("command: {}", memory);
-                                program_name = memory.clone();
-                                program_name.push('\0');
-                                let mut service = CommandBuilder::new();
-                                service.program(&program_name);
-
-                                memory = String::from("");
+                                let mut parser = crate::omicron::shell::CommandParser::new();
                                 let mut k = 0;
                                 for y in string.chars() {
-                                    k += 1;
                                     if k > j {
-                                        if y == ' ' {
-                                            //println!("load arg: {}", memory);
-                                            memory.push('\0');
-                                            service.arg(&memory);
-                                            memory = String::from("");
-                                        } else {
-                                            memory.push(y);
-                                        }
+                                        parser.feed_char(y);
                                     }
                                 }
-                                if memory != "" {
-                                    //println!("load arg: {}", memory);
-                                    memory.push('\0');
-                                    service.arg(&memory);
-                                }
-                                spawn_service(servicename, &mut service, owner);
+                                let mut builder = parser.finish();
+
+                                spawn_service(servicename, &mut builder, owner);
                                 break;
                             }
                             memory = String::from("");

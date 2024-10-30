@@ -41,7 +41,7 @@ impl CommandBuilder {
         self
     }
 
-    pub fn spawn(&mut self) -> Result<Process, String> {
+    pub fn spawn(&self) -> Result<Process, String> {
         use crate::omicron::utils::errno_to_string;
         use crate::omicron::utils::Cstr;
 
