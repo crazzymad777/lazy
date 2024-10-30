@@ -63,4 +63,25 @@ mod tests {
         let actual = parse("hello '1 2 3\\'").to_string();
         assert_eq!(expected, actual);
     }
+
+    #[test]
+    fn test_builder_empty() {
+        let expected = ";;false";
+        let actual = CommandBuilder::new().to_string();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_builder_group() {
+        let expected = ";;true";
+        let actual = CommandBuilder::new().group().to_string();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn test_builder_args() {
+        let expected = "play;world,research,game;false";
+        let actual = CommandBuilder::new().program("play").arg("world").arg("research").arg("game").to_string();
+        assert_eq!(expected, actual);
+    }
 }

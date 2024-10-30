@@ -1,5 +1,6 @@
 use crate::omicron::Process;
 
+#[cfg(test)]
 impl ToString for CommandBuilder {
     fn to_string(&self) -> String {
         let mut result = String::with_capacity(256);
