@@ -5,7 +5,7 @@ pub fn lazycmd() -> std::io::Result<()> {
    use std::process;
    use std::io::Write;
 
-   println!("My pid is {}", process::id());
+   //println!("My pid is {}", process::id());
 
    let args: Vec<String> = env::args().collect();
    let arg = &args[1];
