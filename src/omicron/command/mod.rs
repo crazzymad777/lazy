@@ -1,5 +1,6 @@
 pub mod Builder;
 pub mod Parser;
+mod utils;
 
 pub use crate::omicron::command::Builder::CommandBuilder;
 pub use crate::omicron::command::Parser::CommandParser;

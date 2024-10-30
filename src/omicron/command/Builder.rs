@@ -47,38 +47,26 @@ impl CommandBuilder {
         use crate::omicron::utils::errno_to_string;
         use crate::omicron::utils::Cstr;
 
+        // We must provide correct arguments for execute function
+        //  - argv[0] = program name
+        //  - end element of argv is null pointer
+
+        let l = self.args.len();
+        let mut ptr_args: Vec<*const i8> = Vec::with_capacity(l+2);
+        let file = Cstr::magic(self.program.as_str());
+        ptr_args.push(file); // provide filename of programs as first argument
+
+        let mut i = 0;
+        while i < l {
+            let x = Cstr::magic(self.args[i].as_str());
+            ptr_args.push(x);
+            i = i + 1;
+        }
+        ptr_args.push(std::ptr::null()); // last pointer should be zero
+
         unsafe {
-            let result = libc::fork();
-
-            if result != 0 {
-                return if result > 0 {
-                    Ok(Process::new(result))
-                } else {
-                    // result < 0
-                    Err(errno_to_string().unwrap_or("fork failed".to_string()))
-                }
-            }
-
-            if self.new_group {
-                libc::setsid();
-            }
-
-            // result = 0
-            let l = self.args.len();
-            let mut args: Vec<*const i8> = Vec::with_capacity(l+2);
-            let file = Cstr::magic(self.program.as_str());
-            args.push(file); // provide filename of programs as first argument
-
-            let mut i = 0;
-            while i < l {
-                let x = Cstr::magic(self.args[i].as_str());
-                args.push(x);
-                i = i + 1;
-            }
-            args.push(std::ptr::null()); // last pointer should be zero
-
-            let _error = libc::execvp(file, args.as_ptr());
-            panic!("execvp failed: {}", errno_to_string().unwrap_or("execv failed".to_string())) // child panic
+            // fork, create new session if necessary & execute
+            crate::omicron::command::utils::execute(self.program.as_str(), &ptr_args, self.new_group)
         }
     }
 }
