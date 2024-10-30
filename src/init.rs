@@ -9,7 +9,7 @@ where P: AsRef<Path>, {
 }
 
 use crate::omicron::command::CommandBuilder;
-use crate::omicron::command::Process;
+use crate::omicron::Process;
 use std::collections::HashMap;
 
 struct TheOwner {
@@ -87,7 +87,7 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                             } else if memory == "exec" {
 
                             } else {
-                                let mut parser = crate::omicron::shell::CommandParser::new();
+                                let mut parser = crate::omicron::command::CommandParser::new();
                                 for z in memory.chars() {
                                     parser.feed_char(z);
                                 }
