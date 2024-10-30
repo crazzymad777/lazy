@@ -2,7 +2,7 @@ use std::os::unix::net::UnixStream;
 
 pub fn lazycmd() -> std::io::Result<()> {
    use std::env;
-   use std::process;
+   
    use std::io::Write;
 
    //println!("My pid is {}", process::id());
