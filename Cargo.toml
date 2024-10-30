@@ -8,7 +8,6 @@ license = "GPL-3.0-only"
 
 [dependencies]
 libc = "0.2.161"
-libc-stdhandle = "0.1.0"
 
 [profile.release]
 opt-level = "s"
