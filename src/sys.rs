@@ -20,32 +20,32 @@ pub fn provide_hostname() {
     }
 }
 
-use std::ffi::OsStr;
-fn mount_vfs<S: AsRef<OsStr>>(typefs: S, device: S, dir: S, options: S) {
-    use std::process::Command;
-    use std::path::Path;
-    let _ = std::fs::create_dir(Path::new(&dir));
-    if let Err(e) = Command::new("mount").arg("-t").arg(typefs).arg(device).arg(dir).arg("-o").arg(options).spawn() {
-        eprintln!("Lazy mount failed: {}", e);
-    }
-}
-
-pub fn init_mount() {
-    // virtual file-systems
-    println!("Mount virtual file-systems");
-    mount_vfs("proc", "proc", "/proc", "nosuid,noexec,nodev");
-    mount_vfs("sysfs", "sys", "/sys", "nosuid,noexec,nodev");
-    mount_vfs("tmpfs", "run", "/run", "mode=0755,nosuid,nodev");
-    mount_vfs("devtmpfs", "dev", "/dev", "mode=0755,nosuid");
-    mount_vfs("devpts", "devpts", "/dev/pts", "mode=0620,gid=5,nosuid,noexec");
-    mount_vfs("tmpfs", "shm", "/dev/shm", "mode=1777,nosuid,nodev");
-}
+// use std::ffi::OsStr;
+// fn mount_vfs<S: AsRef<OsStr>>(typefs: S, device: S, dir: S, options: S) {
+//     use std::process::Command;
+//     use std::path::Path;
+//     let _ = std::fs::create_dir(Path::new(&dir));
+//     if let Err(e) = Command::new("mount").arg("-t").arg(typefs).arg(device).arg(dir).arg("-o").arg(options).spawn() {
+//         eprintln!("Lazy mount failed: {}", e);
+//     }
+// }
+//
+// pub fn init_mount() {
+//     // virtual file-systems
+//     println!("Mount virtual file-systems");
+//     mount_vfs("proc", "proc", "/proc", "nosuid,noexec,nodev");
+//     mount_vfs("sysfs", "sys", "/sys", "nosuid,noexec,nodev");
+//     mount_vfs("tmpfs", "run", "/run", "mode=0755,nosuid,nodev");
+//     mount_vfs("devtmpfs", "dev", "/dev", "mode=0755,nosuid");
+//     mount_vfs("devpts", "devpts", "/dev/pts", "mode=0620,gid=5,nosuid,noexec");
+//     mount_vfs("tmpfs", "shm", "/dev/shm", "mode=1777,nosuid,nodev");
+// }
 
 pub fn mount_fstab() {
-    use std::process::Command;
+    use crate::omicron::command::CommandBuilder;
     // remount all
     println!("Mount all");
-    if let Err(e) = Command::new("mount").arg("-o").arg("remount").arg("-a").spawn() {
+    if let Err(e) = CommandBuilder::new("mount").set_args(["-o","remount","-a"].to_vec()).spawn() {
         eprintln!("Lazy mount failed: {}", e);
     }
 }

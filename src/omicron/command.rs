@@ -21,10 +21,22 @@ impl CommandBuilder<'_> {
         self
     }
 
+    pub fn set_args(&mut self, arguments: Vec<&str>) -> &mut Self {
+        let l = arguments.len();
+        self.args = Vec::with_capacity(l);
+        let mut i = 0;
+        while i < l {
+            let argument = arguments[i]; //.as_str();
+            crate::omicron::utils::Cstr::check(argument).unwrap();
+            self.args.push(String::from(argument));
+            i = i + 1;
+        }
+        self
+    }
+
     pub fn spawn(&mut self) -> Result<Process, String> {
         use crate::omicron::utils::errno_to_string;
         use crate::omicron::utils::Cstr;
-        use libc::c_char;
 
         unsafe {
             let result = libc::fork();
@@ -56,7 +68,7 @@ impl CommandBuilder<'_> {
             }
             args.push(std::ptr::null()); // last pointer should be zero
 
-            let error = libc::execvp(file, args.as_ptr());
+            let _error = libc::execvp(file, args.as_ptr());
             panic!("execvp failed: {}", errno_to_string().unwrap_or("execv failed".to_string())) // child panic
         }
     }
@@ -76,10 +88,8 @@ pub struct Process {
 
 impl Process {
     fn new(id: libc::pid_t) -> Process {
-        unsafe {
-            //let pgid = libc::getpgid(id);
-            Process {id}
-        }
+        //unsafe {let pgid = libc::getpgid(id);}
+        Process {id}
     }
 
     pub fn id(self: Process) -> libc::pid_t {
