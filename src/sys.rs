@@ -45,7 +45,7 @@ pub fn mount_fstab() {
     use crate::omicron::command::CommandBuilder;
     // remount all
     println!("Mount all");
-    if let Err(e) = CommandBuilder::new("mount").set_args(["-o","remount","-a"].to_vec()).spawn() {
+    if let Err(e) = CommandBuilder::new("mount\0").set_args(["-o\0","remount\0","-a\0"].to_vec()).spawn() {
         eprintln!("Lazy mount failed: {}", e);
     }
 }

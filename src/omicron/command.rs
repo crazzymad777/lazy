@@ -10,6 +10,8 @@ impl CommandBuilder<'_> {
         }
     }
 
+    // fn make_command for all arguments...
+
     pub fn group(&mut self) -> &mut Self {
         self.new_group = true;
         self

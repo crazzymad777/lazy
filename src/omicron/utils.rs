@@ -54,6 +54,25 @@ pub unsafe fn c_error_to_string(current_error: libc::c_int) -> Option<String> {
     }
 }
 
+// Struct for argv & env
+pub struct CstrVector {
+    strs: Vec<String>
+}
+
+impl CstrVector {
+    pub fn new(s: Vec<String>) -> CstrVector {
+        let l = s.len();
+        let mut vec = CstrVector { strs: Vec::with_capacity(l) };
+        let mut i = 0;
+        while i < l {
+            let x = s[i].as_str();
+            crate::omicron::utils::Cstr::check(x).unwrap();
+            vec.strs.push(String::from(x));
+            i = i + 1;
+        }
+        vec
+    }
+}
 
 // How to build array of strings?
 // const char *argv[]
