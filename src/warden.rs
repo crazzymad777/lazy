@@ -15,17 +15,17 @@ impl Warden {
     pub fn generate_name(&mut self, servicename: String) -> (String, u32) {
         let mut string: String = servicename.clone();
         let option = self.count.get_mut(&string);
-        let mut x = 0;
+
         if option.is_some() {
-             let value = option.unwrap();
-             string = string + &value.to_string();
-             x = *value;
-             *value = *value+1;
+            let value = option.unwrap();
+            string = string + &value.to_string();
+            let x = *value;
+            *value = *value+1;
+            (string, x)
         } else {
             self.count.insert(string.clone(), 1);
-            x = 1;
+            (string, 1)
         }
-        (string, x)
     }
 
     pub fn save(&mut self, servicename: String, unit: Unit) {
