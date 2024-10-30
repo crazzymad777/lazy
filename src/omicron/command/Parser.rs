@@ -4,7 +4,9 @@ use crate::omicron::command;
 pub struct CommandParser {
     memory: String, // use raw bytes?
     builder: CommandBuilder,
-    toggle: bool
+    toggle: bool,
+    in_single_quotes: bool,
+    escape: bool
 }
 
 impl CommandParser {
@@ -12,7 +14,9 @@ impl CommandParser {
         CommandParser {
             memory: String::with_capacity(256),
             builder: CommandBuilder::new(),
-            toggle: false
+            toggle: false,
+            in_single_quotes: false,
+            escape: false
         }
     }
 
@@ -27,11 +31,42 @@ impl CommandParser {
     }
 
     pub fn feed_char(&mut self, x: char) {
-        if x == ' ' {
-            self.load();
-            self.memory = String::from("");
+        if self.in_single_quotes {
+            self.feed_char_with_sepataror(x, '\'');
         } else {
-            self.memory.push(x);
+            self.feed_char_with_sepataror(x, ' ');
+        }
+    }
+
+    pub fn feed_char_with_sepataror(&mut self, x: char, separator: char) {
+        if x == separator {
+            if x == ' ' {
+                self.load();
+                self.memory = String::from("");
+            }
+            if x == '\'' {
+                self.in_single_quotes = false;
+            }
+        } else {
+            if x == '\'' {
+                if self.escape {
+                    self.escape = false;
+                    self.memory.push(x);
+                } else {
+                    self.in_single_quotes = true
+                }
+            } else {
+                if x == '\\' && !self.in_single_quotes {
+                    if self.escape {
+                        self.escape = false;
+                        self.memory.push(x);
+                    } else {
+                        self.escape = true;
+                    }
+                } else {
+                    self.memory.push(x);
+                }
+            }
         }
     }
 

@@ -47,7 +47,7 @@ impl CommandBuilder {
 
         // We must provide correct arguments for execute function
         //  - argv[0] = program name
-        //  - end element of argv is null pointer
+        //  - last element of argv is null pointer
 
         let l = self.args.len();
         let mut ptr_args: Vec<*const i8> = Vec::with_capacity(l+2);
