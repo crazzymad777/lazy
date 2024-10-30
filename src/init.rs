@@ -64,7 +64,7 @@ fn parse_init_file<P>(path: P, warden: &mut Warden) where P: AsRef<Path> {
                                         parser.feed_char(y);
                                     }
                                 }
-                                warden.spawn_supervised(&UnitDescriptor::new(servicename.as_str(), parser.finish()));
+                                warden.spawn_supervised(&UnitDescriptor::new(servicename, parser.finish()));
                                 break;
                             }
                             memory = String::from("");

@@ -85,8 +85,11 @@ impl CommandBuilder {
 }
 
 // &str can be stored in struct if and only if when it was checked
+
+#[derive(Clone)]
 pub struct CommandBuilder {
     program: String,
     args: Vec<String>,
     new_group: bool
 }
+
