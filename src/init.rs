@@ -8,12 +8,12 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
-use command_group::GroupChild;
-use std::process::Command;
+use crate::omicron::command::CommandBuilder;
+use crate::omicron::command::Process;
 use std::collections::HashMap;
 
 struct TheOwner {
-    services: HashMap<String, GroupChild>,
+    services: HashMap<String, Process>,
     count: HashMap<String, u32>
 }
 
@@ -31,14 +31,12 @@ impl TheOwner {
         string
     }
 
-    fn save(&mut self, servicename: String, child: GroupChild) {
+    fn save(&mut self, servicename: String, child: Process) {
         self.services.insert(servicename, child);
     }
 }
 
-use command_group::builder::CommandGroupBuilder;
-
-fn spawn_service(servicename: String, command: &mut CommandGroupBuilder<'_, Command>, owner: &mut TheOwner) {
+fn spawn_service(servicename: String, command: &mut CommandBuilder<'_>, owner: &mut TheOwner) {
     let name = owner.generate_name(servicename);
     if let Ok(child) = command.spawn() {
         println!("Lazy: spawn {} {}", name, child.id());
@@ -49,8 +47,6 @@ fn spawn_service(servicename: String, command: &mut CommandGroupBuilder<'_, Comm
 }
 
 fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
-    use command_group::CommandGroup;
-
     if let Ok(lines) = read_lines(path) {
         for line in lines {
             if let Ok(ref _x) = line {
@@ -62,6 +58,8 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                 // The Worst Parser Ever
                 let mut servicename = String::from("unit");
                 let mut memory = String::from("");
+                let mut program_name: String = String::from("");
+
                 let string = line.unwrap();
                 let mut i = 0;
                 for x in string.chars() {
@@ -90,7 +88,9 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
 
                             } else {
                                 //println!("command: {}", memory);
-                                let mut service = Command::new(memory);
+                                program_name = memory.clone();
+                                program_name.push('\0');
+                                let mut service = CommandBuilder::new(&program_name);
                                 memory = String::from("");
                                 let mut k = 0;
                                 for y in string.chars() {
@@ -98,7 +98,8 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                                     if k > j {
                                         if y == ' ' {
                                             //println!("load arg: {}", memory);
-                                            service.arg(memory);
+                                            memory.push('\0');
+                                            service.arg(&memory);
                                             memory = String::from("");
                                         } else {
                                             memory.push(y);
@@ -107,9 +108,10 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                                 }
                                 if memory != "" {
                                     //println!("load arg: {}", memory);
-                                    service.arg(memory);
+                                    memory.push('\0');
+                                    service.arg(&memory);
                                 }
-                                spawn_service(servicename, &mut service.group(), owner);
+                                spawn_service(servicename, &mut service, owner);
                                 break;
                             }
                             memory = String::from("");
@@ -124,13 +126,8 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
 }
 
 pub fn main() {
-    use crate::omicron::command::CommandBuilder;
-    use command_group::CommandGroup;
-    use std::process::Command;
     use super::server;
     use crate::sys::{provide_hostname, mount_fstab, disable_nologin};
-
-    CommandBuilder::new("shell");
 
     let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");
@@ -143,12 +140,12 @@ pub fn main() {
     if path.exists() {
         parse_init_file(path, &mut the_owner);
     } else {
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty1").group(), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty2").group(), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty3").group(), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty4").group(), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty5").group(), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut Command::new("agetty").arg("tty6").group(), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty").arg("tty1"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty").arg("tty2"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty").arg("tty3"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty").arg("tty4"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty").arg("tty5"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new("agetty").arg("tty6"), &mut the_owner);
         //spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").group(), &mut the_owner);
     }
 
