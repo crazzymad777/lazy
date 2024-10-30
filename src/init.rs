@@ -12,12 +12,12 @@ use crate::omicron::command::CommandBuilder;
 use crate::omicron::Process;
 use std::collections::HashMap;
 
-struct TheOwner {
+pub struct Warden {
     services: HashMap<String, Process>,
     count: HashMap<String, u32>
 }
 
-impl TheOwner {
+impl Warden {
     fn generate_name(&mut self, servicename: String) -> String {
         let mut string: String = servicename.clone();
         let option = self.count.get_mut(&string);
@@ -36,7 +36,7 @@ impl TheOwner {
     }
 }
 
-fn spawn_service(servicename: String, command: &mut CommandBuilder, owner: &mut TheOwner) {
+fn spawn_service(servicename: String, command: &mut CommandBuilder, owner: &mut Warden) {
     let name = owner.generate_name(servicename);
     if let Ok(child) = command.group().spawn() {
         println!("Lazy: spawn {} {}", name, child.id());
@@ -46,7 +46,7 @@ fn spawn_service(servicename: String, command: &mut CommandBuilder, owner: &mut 
     }
 }
 
-fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
+fn parse_init_file<P>(path: P, owner: &mut Warden) where P: AsRef<Path> {
     if let Ok(lines) = read_lines(path) {
         for line in lines {
             if let Ok(ref _x) = line {
@@ -58,7 +58,6 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
                 // The Worst Parser Ever
                 let mut servicename = String::from("unit");
                 let mut memory = String::from("");
-                let program_name: String = String::from("");
 
                 let string = line.unwrap();
                 let mut i = 0;
@@ -118,7 +117,7 @@ pub fn main() {
     use super::server;
     use crate::sys::{provide_hostname, mount_fstab, disable_nologin};
 
-    let mut the_owner = TheOwner {services: HashMap::new(), count: HashMap::new()};
+    let mut the_owner = Warden {services: HashMap::new(), count: HashMap::new()};
     println!("Lazy init");
     //init_mount();
     provide_hostname();
