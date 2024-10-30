@@ -88,15 +88,19 @@ fn parse_init_file<P>(path: P, owner: &mut TheOwner) where P: AsRef<Path> {
 
                             } else {
                                 let mut parser = crate::omicron::shell::CommandParser::new();
+                                for z in memory.chars() {
+                                    parser.feed_char(z);
+                                }
+                                parser.feed_char(' ');
+
                                 let mut k = 0;
                                 for y in string.chars() {
+                                    k = k + 1;
                                     if k > j {
                                         parser.feed_char(y);
                                     }
                                 }
-                                let mut builder = parser.finish();
-
-                                spawn_service(servicename, &mut builder, owner);
+                                spawn_service(servicename, &mut parser.finish(), owner);
                                 break;
                             }
                             memory = String::from("");

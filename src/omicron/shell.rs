@@ -36,7 +36,7 @@ impl CommandParser {
     }
 
     pub fn finish(mut self) -> CommandBuilder {
-        if self.memory == "" {
+        if self.memory != "" {
             self.load();
         }
         self.builder
