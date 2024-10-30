@@ -9,32 +9,7 @@ where P: AsRef<Path>, {
 }
 
 use crate::omicron::command::CommandBuilder;
-use crate::omicron::Process;
-use std::collections::HashMap;
-
-pub struct Warden {
-    services: HashMap<String, Process>,
-    count: HashMap<String, u32>
-}
-
-impl Warden {
-    fn generate_name(&mut self, servicename: String) -> String {
-        let mut string: String = servicename.clone();
-        let option = self.count.get_mut(&string);
-        if option.is_some() {
-             let value = option.unwrap();
-             string = string + &value.to_string();
-             *value = *value+1;
-        } else {
-            self.count.insert(string.clone(), 1);
-        }
-        string
-    }
-
-    fn save(&mut self, servicename: String, child: Process) {
-        self.services.insert(servicename, child);
-    }
-}
+use crate::warden::Warden;
 
 fn spawn_service(servicename: String, command: &mut CommandBuilder, owner: &mut Warden) {
     let name = owner.generate_name(servicename);
@@ -114,10 +89,11 @@ fn parse_init_file<P>(path: P, owner: &mut Warden) where P: AsRef<Path> {
 }
 
 pub fn main() {
+    use super::sys::{provide_hostname, mount_fstab, disable_nologin};
+    use std::collections::HashMap;
     use super::server;
-    use crate::sys::{provide_hostname, mount_fstab, disable_nologin};
 
-    let mut the_owner = Warden {services: HashMap::new(), count: HashMap::new()};
+    let mut warden = Warden::new(HashMap::new(), HashMap::new());
     println!("Lazy init");
     //init_mount();
     provide_hostname();
@@ -126,14 +102,14 @@ pub fn main() {
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
-        parse_init_file(path, &mut the_owner);
+        parse_init_file(path, &mut warden);
     } else {
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty1\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty2\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty3\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty4\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty5\0"), &mut the_owner);
-        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty6\0"), &mut the_owner);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty1\0"), &mut warden);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty2\0"), &mut warden);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty3\0"), &mut warden);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty4\0"), &mut warden);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty5\0"), &mut warden);
+        spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty6\0"), &mut warden);
         //spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").group(), &mut the_owner);
     }
 

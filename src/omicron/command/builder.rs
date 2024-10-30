@@ -58,7 +58,6 @@ impl CommandBuilder {
     }
 
     pub fn spawn(&self) -> Result<Process, String> {
-        
         use crate::omicron::utils::Cstr;
 
         // We must provide correct arguments for execute function
