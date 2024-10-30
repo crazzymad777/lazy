@@ -1,33 +1,36 @@
+use crate::omicron::command::CommandBuilder;
 use crate::omicron::command;
 
-pub fn run(_command: &str) -> Result<command::Process, String> {
-    use crate::omicron::command::CommandBuilder;
-    let memory = String::with_capacity(256);
-
+pub fn parse(_command: &str) -> CommandBuilder {
+    let mut memory = String::with_capacity(256); // use raw bytes?
     let mut builder = CommandBuilder::new();
     let mut i = 0;
     let len = _command.len();
     let mut toggle = false;
-    while i < len {
-        let x = _command[i];
+
+    for x in _command.chars() {
         if x == ' ' {
             memory.push('\0');
-            if (toggle) {
-                builder.arg(memory);
+            if toggle {
+                builder.arg(&memory);
             } else {
-                builder.program(memory);
+                builder.program(&memory);
                 toggle = true;
             }
             memory = String::from("");
         } else {
-            s.push(x);
+            memory.push(x);
         }
-        i = i + 1;
     }
 
-    if (memory != "") {
-        builder.arg(memory);
+    if memory != "" {
+        memory.push('\0');
+        builder.arg(&memory);
     }
 
-    builder.spawn()
+    builder
+}
+
+pub fn run(_command: &str) -> Result<command::Process, String> {
+    parse(_command).spawn()
 }
