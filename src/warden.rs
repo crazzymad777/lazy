@@ -42,4 +42,18 @@ impl Warden {
         }
         self.save(tuple.0, unit);
     }
+
+    pub fn stop_unit(&mut self, service_name: String) {
+        let option = self.services.get(&service_name);
+        if let Some(unit) = option {
+            if let Some(x) = unit.get_process() {
+                let _ = x.signal_to_group(libc::SIGTERM);
+            }
+        }
+    }
+
+    pub fn restart_unit(&mut self, service_name: String) {
+        self.stop_unit(service_name);
+        // mark unit for restart?
+    }
 }

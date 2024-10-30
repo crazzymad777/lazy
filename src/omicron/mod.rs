@@ -31,6 +31,18 @@ impl Process {
             }
         }
     }
+
+    pub fn signal_to_group(self: Process, signal: i32) -> Result<(), String> {
+        use crate::omicron::utils::errno_to_string;
+        unsafe {
+            let pgid = libc::getpgid(self.id);
+            if libc::killpg(pgid, signal) == -1 {
+                Err(errno_to_string().unwrap_or("killpg failed".to_string()))
+            } else {
+                Ok(())
+            }
+        }
+    }
 }
 
 #[cfg(test)]
