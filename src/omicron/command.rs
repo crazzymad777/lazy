@@ -17,7 +17,7 @@ impl CommandBuilder<'_> {
 
     pub fn arg(&mut self, argument: &str) -> &mut Self {
         crate::omicron::utils::Cstr::check(argument).unwrap();
-        //self.args.push(argument);
+        self.args.push(String::from(argument));
         self
     }
 
@@ -39,7 +39,20 @@ impl CommandBuilder<'_> {
             }
 
             // result = 0
-            let error = libc::execv(Cstr::magic(self.program), std::ptr::null());
+            let l = self.args.len();
+            let mut args: Vec<*const i8> = Vec::with_capacity(l+2);
+            let file = Cstr::magic(self.program);
+            args.push(file); // provide filename of programs as first argument
+
+            let mut i = 0;
+            while i < l {
+                let x = Cstr::magic(self.args[i].as_str());
+                args.push(x);
+                i = i + 1;
+            }
+            args.push(std::ptr::null()); // last pointer should be zero
+
+            let error = libc::execvp(file, args.as_ptr());
             panic!("execv failed: {}", errno_to_string().unwrap_or("execv failed".to_string())) // child panic
         }
     }
@@ -48,6 +61,6 @@ impl CommandBuilder<'_> {
 // &str can be stored in struct if and only if when it was checked
 pub struct CommandBuilder<'a> {
     program: &'a str,
-    args: Vec<&'a str>,
+    args: Vec<String>,
     new_group: bool
 }
