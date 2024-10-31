@@ -1,5 +1,25 @@
 use crate::unit::UnitDescriptor;
 
+/*
+ * Message:
+ * Message must be serializble
+ * Message should be possibly implemented in other programming languages
+ * Message Types:
+ *  - Shutdown
+ *  - NewService
+ *  - DeleteService
+ *  - StartService
+ *  - StopService
+ *  - RestartService
+ *  - ReloadService
+ *  - StatusService
+ *  - ListOfServices
+ *  - CloseConnection
+ * Replies:
+ *  - Fail (reason)
+ *  - Ok (list, status, none)
+ */
+
 #[derive(PartialEq)]
 pub enum MessageCommand {
     ExecService,
