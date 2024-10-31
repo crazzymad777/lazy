@@ -53,6 +53,8 @@ fn parse_init_file<P>(path: P, tx: std::sync::mpsc::Sender<super::message::Messa
 
                             } else {
                                 let mut parser = crate::omicron::command::CommandParser::new();
+                                parser.set_group();
+
                                 for z in memory.chars() {
                                     parser.feed_char(z);
                                 }

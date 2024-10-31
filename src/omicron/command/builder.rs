@@ -38,6 +38,11 @@ impl CommandBuilder {
         self
     }
 
+    pub fn simple(&mut self) -> &mut Self {
+        self.new_group = false;
+        self
+    }
+
     pub fn arg(&mut self, argument: &str) -> &mut Self {
         crate::omicron::utils::Cstr::check(argument).unwrap();
         self.args.push(String::from(argument));

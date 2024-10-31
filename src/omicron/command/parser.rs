@@ -19,6 +19,14 @@ impl CommandParser {
         }
     }
 
+    pub fn set_group(&mut self) {
+        self.builder.group();
+    }
+
+    pub fn set_simple(&mut self) {
+        self.builder.simple();
+    }
+
     fn load(&mut self) {
         self.memory.push('\0');
         if self.toggle {
