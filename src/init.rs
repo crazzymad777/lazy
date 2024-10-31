@@ -10,7 +10,8 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
-fn parse_init_file<P>(path: P, warden: &mut Warden) where P: AsRef<Path> {
+fn parse_init_file<P>(path: P, tx: std::sync::mpsc::Sender<super::message::Message>) where P: AsRef<Path> {
+    use crate::message::*;
 
     if let Ok(lines) = read_lines(path) {
         for line in lines {
@@ -64,7 +65,12 @@ fn parse_init_file<P>(path: P, warden: &mut Warden) where P: AsRef<Path> {
                                         parser.feed_char(y);
                                     }
                                 }
-                                warden.spawn_supervised(&UnitDescriptor::new(servicename, parser.finish()));
+                                let message = Message::new(
+                                    MessageCommand::ExecService,
+                                    MessagePayload::Descriptor(UnitDescriptor::new(servicename, parser.finish()))
+                                );
+                                tx.send(message);
+                                //warden.spawn_supervised(&UnitDescriptor::new(servicename, parser.finish()));
                                 break;
                             }
                             memory = String::from("");
@@ -79,12 +85,23 @@ fn parse_init_file<P>(path: P, warden: &mut Warden) where P: AsRef<Path> {
 }
 
 pub fn main() {
+    use crate::message::Message;
+
+    use std::sync::mpsc::{Sender, Receiver};
+    use std::sync::mpsc;
+    use std::thread;
+
     use super::sys::{provide_hostname, mount_fstab, disable_nologin};
     use std::collections::HashMap;
     use super::server;
 
-    let mut warden = Warden::new(HashMap::new(), HashMap::new());
     println!("Lazy init");
+
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        super::warden::spawn_warden(rx);
+    });
+
     //init_mount();
     provide_hostname();
     mount_fstab();
@@ -92,7 +109,7 @@ pub fn main() {
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {
-        parse_init_file(path, &mut warden);
+        parse_init_file(path, tx.clone());
     } else {
         // spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty1\0"), &mut warden);
         // spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty2\0"), &mut warden);
@@ -103,6 +120,6 @@ pub fn main() {
         //spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").group(), &mut the_owner);
     }
 
-    let _ = server::main();
+    let _ = server::main(tx);
 }
 

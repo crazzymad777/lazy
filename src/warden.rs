@@ -2,6 +2,33 @@ use crate::unit::UnitDescriptor;
 use std::collections::HashMap;
 use crate::unit::Unit;
 
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc;
+
+use crate::message::Message;
+
+pub fn spawn_warden(rx: Receiver<Message>) {
+    let mut warden = Warden::new(HashMap::new(), HashMap::new());
+    let mut command = rx.recv();
+    while let Ok(x) = command {
+        command_warden(&mut warden, x);
+        command = rx.recv();
+    }
+    // println!("Warden exits...");
+}
+
+fn command_warden(employee: &mut Warden, value: Message) {
+    use crate::sys;
+    use crate::message::MessageCommand::ExecService;
+    use crate::message::MessageCommand;
+    use crate::message::MessagePayload::Shutdown;
+    if value.cmd == ExecService {
+        employee.spawn_supervised(value.get_descriptor().unwrap());
+    } else if value.cmd == MessageCommand::Shutdown {
+        sys::reboot(value.get_shutdown().unwrap());
+    }
+}
+
 pub struct Warden {
     services: HashMap<String, Unit>,
     count: HashMap<String, u32>
@@ -32,7 +59,7 @@ impl Warden {
         self.services.insert(servicename, unit);
     }
 
-    pub fn spawn_supervised(&mut self, descriptor: &UnitDescriptor) {
+    pub fn spawn_supervised(&mut self, descriptor: UnitDescriptor) {
         let tuple = self.generate_name(descriptor.get_name());
         let unit = descriptor.spawn(Some(tuple.1));
         if let Some(x) = unit.get_process() {

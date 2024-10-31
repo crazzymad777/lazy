@@ -1,7 +1,7 @@
 use std::thread;
 use std::os::unix::net::{UnixStream, UnixListener};
 
-fn handle_client(mut stream: UnixStream) -> std::io::Result<()> {
+fn handle_client(mut stream: UnixStream, tx: std::sync::mpsc::Sender<super::message::Message>) -> std::io::Result<()> {
     use super::sys;
     use std::io::Read;
     let mut response = String::new();
@@ -12,7 +12,7 @@ fn handle_client(mut stream: UnixStream) -> std::io::Result<()> {
     Ok(())
 }
 
-pub fn main() -> std::io::Result<()> {
+pub fn main(tx: std::sync::mpsc::Sender<super::message::Message>) -> std::io::Result<()> {
 	let listener = UnixListener::bind("/run/lazy")?;
 
 	// accept connections and process them, spawning a new thread for each one
@@ -20,7 +20,8 @@ pub fn main() -> std::io::Result<()> {
 		match stream {
 		    Ok(stream) => {
 				/* connection succeeded */
-				thread::spawn(|| handle_client(stream));
+				let messager = tx.clone();
+				thread::spawn(|| handle_client(stream, messager));
 		    }
 		    Err(err) => {
 				/* connection failed */
