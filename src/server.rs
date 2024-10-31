@@ -4,10 +4,18 @@ use std::os::unix::net::{UnixStream, UnixListener};
 fn handle_client(mut stream: UnixStream, tx: std::sync::mpsc::Sender<super::message::Message>) -> std::io::Result<()> {
     use super::sys;
     use std::io::Read;
+	use crate::message::Message;
+	use crate::message::MessageCommand;
+	use crate::message::MessagePayload;
     let mut response = String::new();
     stream.read_to_string(&mut response)?;
     if response == "poweroff" || response == "halt" || response == "reboot" {
-        sys::reboot(response);
+        //sys::reboot(response);
+		let message = Message::new(
+			MessageCommand::Shutdown,
+			MessagePayload::Shutdown(response)
+		);
+		tx.send(message);
     }
     Ok(())
 }
