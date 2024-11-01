@@ -108,13 +108,16 @@ pub fn main() {
     use std::sync::mpsc;
     use std::thread;
 
-    use super::sys::{init_mount, provide_hostname, mount_fstab, enable_swap};
+    use super::sys::{init_mount, provide_hostname, mount_fstab, enable_swap, mute_kernel};
     use std::collections::HashMap;
     use super::server;
 
     println!("Lazy init");
 
     use crate::omicron::utils::Cstr;
+    unsafe {
+        libc::setsid();
+    }
     unsafe {
         libc::chdir(Cstr::new_magic("/\0"));
     }
@@ -128,7 +131,7 @@ pub fn main() {
     provide_hostname();
     mount_fstab();
     enable_swap();
-
+    mute_kernel();
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {

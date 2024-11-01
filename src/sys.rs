@@ -56,3 +56,11 @@ pub fn enable_swap() {
         eprintln!("Lazy: enable swap failed: {}", e);
     }
 }
+
+pub fn mute_kernel() {
+    let result = std::fs::File::create("/proc/sys/kernel/printk");
+    if let Ok(mut x) = result {
+        use std::io::Write;
+        let _ = x.write_all(b"3 3 3 3");
+    }
+}
