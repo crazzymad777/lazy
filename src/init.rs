@@ -49,16 +49,13 @@ impl InitParser {
                 self.memory.push(x);
             }
         } else {
-            if x == ' ' {
+            if x == ' ' && self.j == 0 {
                 if self.memory != "" {
                     if self.j == 0 {
                         if self.memory == "exec" {
                             self.command_parser.set_group();
                             self.j += 1;
                         }
-                    } else if self.j >= 1 {
-                        self.command_parser.feed_char(x);
-                        self.j += 1;
                     }
                 }
             } else {
