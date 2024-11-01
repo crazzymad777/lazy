@@ -15,11 +15,11 @@ use std::sync::mpsc::Sender;
 use super::message::Message;
 
 struct InitParser {
-    pub service_name: String,
+    service_name: String,
     memory: String,
     possible_service_name: bool,
     j: u32,
-    pub command_parser: CommandParser
+    command_parser: CommandParser
 }
 
 impl InitParser {
