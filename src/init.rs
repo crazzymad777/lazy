@@ -10,76 +10,94 @@ where P: AsRef<Path>, {
     Ok(io::BufReader::new(file).lines())
 }
 
-fn parse_init_file<P>(path: P, tx: std::sync::mpsc::Sender<super::message::Message>) where P: AsRef<Path> {
+use crate::omicron::command::CommandParser;
+use std::sync::mpsc::Sender;
+use super::message::Message;
+
+struct InitParser {
+    pub service_name: String,
+    memory: String,
+    possible_service_name: bool,
+    j: u32,
+    pub command_parser: CommandParser
+}
+
+impl InitParser {
+    pub fn new() -> InitParser {
+        InitParser {
+            service_name: String::from(""),
+            memory: String::from(""),
+            possible_service_name: true,
+            j: 0,
+            command_parser: CommandParser::new()
+        }
+    }
+
+    pub fn exec_service(&mut self) -> bool {
+        self.j >= 1
+    }
+
+    pub fn feed_char(&mut self, x: char) {
+        if self.possible_service_name {
+            if x == ':' {
+                self.service_name = self.memory.clone();
+                self.possible_service_name = false;
+                self.memory.clear();
+            } else if x == ' ' {
+                self.possible_service_name = false;
+            } else {
+                self.memory.push(x);
+            }
+        } else {
+            if x == ' ' {
+                if self.memory != "" {
+                    if self.j == 0 {
+                        if self.memory == "exec" {
+                            self.command_parser.set_group();
+                            self.j += 1;
+                        }
+                    } else if self.j >= 1 {
+                        self.command_parser.feed_char(x);
+                        self.j += 1;
+                    }
+                }
+            } else {
+                if self.j == 0 {
+                    self.memory.push(x);
+                } else if self.j >= 1 {
+                    self.command_parser.feed_char(x);
+                    self.j += 1;
+                }
+            }
+        }
+    }
+}
+
+fn parse_init_file<P>(path: P, tx: Sender<Message>) where P: AsRef<Path> {
     use crate::message::*;
 
     if let Ok(lines) = read_lines(path) {
         for line in lines {
-            if let Ok(ref _x) = line {
+            if let Ok(ref result) = line {
                 // name of service: exec cmd (args)
                 // +mount
                 // +hostname
                 //
 
-                // The Worst Parser Ever
-                let mut servicename = String::from("unit");
-                let mut memory = String::from("");
-
-                let string = line.unwrap();
-                let mut i = 0;
-                for x in string.chars() {
-                    i += 1;
-                    if x == ':' {
-                        servicename = memory.clone();
-                        break;
-                    }
-                    if x == ' ' {
-                        i = 0;
-                        break;
-                    }
-                    memory.push(x);
+                let mut parser = InitParser::new();
+                for x in result.chars() {
+                    parser.feed_char(x);
                 }
 
-                memory = String::from("");
-                let mut j = 0;
-                //println!("servicename: {}", servicename);
-                for x in string.chars() {
-                    j += 1;
-                    if j > i {
-                        if x == ' ' {
-                            if memory == "" {
-
-                            } else if memory == "exec" {
-
-                            } else {
-                                let mut parser = crate::omicron::command::CommandParser::new();
-                                parser.set_group();
-
-                                for z in memory.chars() {
-                                    parser.feed_char(z);
-                                }
-                                parser.feed_char(' ');
-
-                                let mut k = 0;
-                                for y in string.chars() {
-                                    k = k + 1;
-                                    if k > j {
-                                        parser.feed_char(y);
-                                    }
-                                }
-                                let message = Message::new(
-                                    MessageCommand::ExecService,
-                                    MessagePayload::Descriptor(UnitDescriptor::new(servicename, parser.finish()))
-                                );
-                                tx.send(message);
-                                //warden.spawn_supervised(&UnitDescriptor::new(servicename, parser.finish()));
-                                break;
-                            }
-                            memory = String::from("");
-                            continue;
-                        }
-                        memory.push(x);
-                    }
+                if parser.exec_service() {
+                    let message = Message::new(
+                        MessageCommand::ExecService,
+                        MessagePayload::Descriptor(UnitDescriptor::new(
+                            parser.service_name,
+                            parser.command_parser.finish()
+                        ))
+                    );
+                    tx.send(message);
                 }
             }
         }
