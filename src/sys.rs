@@ -21,25 +21,25 @@ pub fn provide_hostname() {
 }
 
 // use std::ffi::OsStr;
-// fn mount_vfs<S: AsRef<OsStr>>(typefs: S, device: S, dir: S, options: S) {
-//     use std::process::Command;
+// fn mount_vfs<S: AsRef<OsStr> + std::ops::Add<&str, Output = &str>>(typefs: S, device: S, dir: S, options: S) {
+//     use crate::omicron::command::CommandBuilder;
 //     use std::path::Path;
 //     let _ = std::fs::create_dir(Path::new(&dir));
-//     if let Err(e) = Command::new("mount").arg("-t").arg(typefs).arg(device).arg(dir).arg("-o").arg(options).spawn() {
+//     if let Err(e) = CommandBuilder::new().program("mount\0").arg("-t\0").arg(typefs+"\0").arg(device+"\0").arg(dir+"\0").arg("-o\0").arg(options+"\0").spawn() {
 //         eprintln!("Lazy mount failed: {}", e);
 //     }
 // }
-//
-// pub fn init_mount() {
-//     // virtual file-systems
-//     println!("Mount virtual file-systems");
-//     mount_vfs("proc", "proc", "/proc", "nosuid,noexec,nodev");
-//     mount_vfs("sysfs", "sys", "/sys", "nosuid,noexec,nodev");
-//     mount_vfs("tmpfs", "run", "/run", "mode=0755,nosuid,nodev");
-//     mount_vfs("devtmpfs", "dev", "/dev", "mode=0755,nosuid");
-//     mount_vfs("devpts", "devpts", "/dev/pts", "mode=0620,gid=5,nosuid,noexec");
-//     mount_vfs("tmpfs", "shm", "/dev/shm", "mode=1777,nosuid,nodev");
-// }
+
+pub fn init_mount() {
+    // virtual file-systems
+    // println!("Mount virtual file-systems");
+    // mount_vfs("proc", "proc", "/proc", "nosuid,noexec,nodev");
+    // mount_vfs("sysfs", "sys", "/sys", "nosuid,noexec,nodev");
+    // mount_vfs("tmpfs", "run", "/run", "mode=0755,nosuid,nodev");
+    // mount_vfs("devtmpfs", "dev", "/dev", "mode=0755,nosuid");
+    // mount_vfs("devpts", "devpts", "/dev/pts", "mode=0620,gid=5,nosuid,noexec");
+    // mount_vfs("tmpfs", "shm", "/dev/shm", "mode=1777,nosuid,nodev");
+}
 
 pub fn mount_fstab() {
     use crate::omicron::command::CommandBuilder;
@@ -51,7 +51,8 @@ pub fn mount_fstab() {
 }
 
 pub fn enable_swap() {
-    if let Err(e) = CommandBuilder::new().program("swapon\0").arg("-a\0")).spawn() {
+    use crate::omicron::command::CommandBuilder;
+    if let Err(e) = CommandBuilder::new().program("swapon\0").arg("-a\0").spawn() {
         eprintln!("Lazy: enable swap failed: {}", e);
     }
 }

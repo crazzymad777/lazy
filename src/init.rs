@@ -108,20 +108,23 @@ pub fn main() {
     use std::sync::mpsc;
     use std::thread;
 
-    use super::sys::{provide_hostname, mount_fstab, disable_nologin};
+    use super::sys::{init_mount, provide_hostname, mount_fstab, enable_swap};
     use std::collections::HashMap;
     use super::server;
 
     println!("Lazy init");
 
-    libc::chdir(Cstr::new_magic("/\0"));
+    use crate::omicron::utils::Cstr;
+    unsafe {
+        libc::chdir(Cstr::new_magic("/\0"));
+    }
 
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
         super::warden::spawn_warden(rx);
     });
 
-    //init_mount();
+    init_mount();
     provide_hostname();
     mount_fstab();
     enable_swap();
