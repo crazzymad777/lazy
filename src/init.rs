@@ -1,5 +1,4 @@
 use super::unit::descriptor::UnitDescriptor;
-use super::warden::Warden;
 use std::io::{self, BufRead};
 use std::fs::File;
 use std::path::Path;
@@ -102,14 +101,14 @@ fn parse_init_file<P>(path: P, tx: Sender<Message>) where P: AsRef<Path> {
 }
 
 pub fn main() {
-    use crate::message::Message;
+    
 
-    use std::sync::mpsc::{Sender, Receiver};
+    
     use std::sync::mpsc;
     use std::thread;
 
     use super::sys::{new_process_session, change_dir_to_root, init_mount, provide_hostname, mount_fstab, enable_swap, mute_kernel};
-    use std::collections::HashMap;
+    
     use super::server;
 
     println!("Lazy init");

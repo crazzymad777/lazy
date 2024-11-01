@@ -46,7 +46,7 @@ pub unsafe fn execute(program: &str, ptr_args: &Vec<*const i8>, new_group: bool)
     // result = 0
     unsafe {
         // redirect stdio
-        use libc::FILE;
+        
         let file_out = fopen_write_to_null();
         let new_fd_out = libc::fileno(file_out);
 
