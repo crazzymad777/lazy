@@ -64,3 +64,16 @@ pub fn mute_kernel() {
         let _ = x.write_all(b"3 3 3 3");
     }
 }
+
+pub fn new_process_session() {
+    unsafe {
+        libc::setsid();
+    }
+}
+
+pub fn change_dir_to_root() {
+    use crate::omicron::utils::Cstr;
+    unsafe {
+        libc::chdir(Cstr::new_magic("/\0"));
+    }
+}

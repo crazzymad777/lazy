@@ -108,19 +108,14 @@ pub fn main() {
     use std::sync::mpsc;
     use std::thread;
 
-    use super::sys::{init_mount, provide_hostname, mount_fstab, enable_swap, mute_kernel};
+    use super::sys::{new_process_session, change_dir_to_root, init_mount, provide_hostname, mount_fstab, enable_swap, mute_kernel};
     use std::collections::HashMap;
     use super::server;
 
     println!("Lazy init");
 
-    use crate::omicron::utils::Cstr;
-    unsafe {
-        libc::setsid();
-    }
-    unsafe {
-        libc::chdir(Cstr::new_magic("/\0"));
-    }
+    new_process_session();
+    change_dir_to_root();
 
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
@@ -137,17 +132,12 @@ pub fn main() {
     if path.exists() {
         parse_init_file(path, tx.clone());
     } else {
-        use crate::omicron::command::CommandBuilder;
         use crate::message::*;
-
-        let mut builder = CommandBuilder::new();
-        builder.program("agetty\0").arg("tty1\0").group();
-
         let message = Message::new(
             MessageCommand::ExecService,
             MessagePayload::Descriptor(UnitDescriptor::new(
                 "agetty".to_string(),
-                builder
+                crate::omicron::command::parse("agetty tty1")
             ))
         );
         tx.send(message);
