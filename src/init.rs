@@ -113,13 +113,20 @@ pub fn main() {
     if path.exists() {
         parse_init_file(path, tx.clone());
     } else {
-        // spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty1\0"), &mut warden);
-        // spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty2\0"), &mut warden);
-        // spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty3\0"), &mut warden);
-        // spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty4\0"), &mut warden);
-        // spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty5\0"), &mut warden);
-        // spawn_service("agetty".to_string(), &mut CommandBuilder::new().program("agetty\0").arg("tty6\0"), &mut warden);
-        //spawn_service("udevd".to_string(), &mut Command::new("/usr/lib/systemd/systemd-udevd").arg("--daemon").group(), &mut the_owner);
+        use crate::omicron::command::CommandBuilder;
+        use crate::message::*;
+
+        let mut builder = CommandBuilder::new();
+        builder.program("agetty\0").arg("tty1\0").group();
+
+        let message = Message::new(
+            MessageCommand::ExecService,
+            MessagePayload::Descriptor(UnitDescriptor::new(
+                "agetty".to_string(),
+                builder
+            ))
+        );
+        tx.send(message);
     }
 
     let _ = server::main(tx);
