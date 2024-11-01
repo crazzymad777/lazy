@@ -2,7 +2,7 @@ use std::thread;
 use std::os::unix::net::{UnixStream, UnixListener};
 
 fn handle_client(mut stream: UnixStream, tx: std::sync::mpsc::Sender<super::message::Message>) -> std::io::Result<()> {
-    use super::sys;
+    
     use std::io::Read;
 	use crate::message::Message;
 	use crate::message::MessageCommand;
@@ -17,6 +17,9 @@ fn handle_client(mut stream: UnixStream, tx: std::sync::mpsc::Sender<super::mess
 		);
 		tx.send(message);
     }
+    //if response == "list" || response == "status" || response == "start" || response == "stop" {
+	//
+	//	}
     Ok(())
 }
 

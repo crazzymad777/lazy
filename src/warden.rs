@@ -3,9 +3,10 @@ use std::collections::HashMap;
 use crate::unit::Unit;
 
 use std::sync::mpsc::Receiver;
-use std::sync::mpsc;
 
 use crate::message::Message;
+
+// I like idea but i don't like implementation...
 
 pub fn spawn_warden(rx: Receiver<Message>) {
     let mut warden = Warden::new(HashMap::new(), HashMap::new());
@@ -21,7 +22,7 @@ fn command_warden(employee: &mut Warden, value: Message) {
     use crate::sys;
     use crate::message::MessageCommand::ExecService;
     use crate::message::MessageCommand;
-    use crate::message::MessagePayload::Shutdown;
+    
     if value.cmd == ExecService {
         employee.spawn_supervised(value.get_descriptor().unwrap());
     } else if value.cmd == MessageCommand::Shutdown {
