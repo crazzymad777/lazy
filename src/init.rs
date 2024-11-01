@@ -114,6 +114,8 @@ pub fn main() {
 
     println!("Lazy init");
 
+    libc::chdir(Cstr::new_magic("/\0"));
+
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
         super::warden::spawn_warden(rx);
@@ -122,7 +124,8 @@ pub fn main() {
     //init_mount();
     provide_hostname();
     mount_fstab();
-    disable_nologin();
+    enable_swap();
+
 
     let path = Path::new("/etc/lazy.d/init");
     if path.exists() {

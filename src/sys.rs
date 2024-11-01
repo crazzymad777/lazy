@@ -46,10 +46,12 @@ pub fn mount_fstab() {
     // remount all
     println!("Mount all");
     if let Err(e) = CommandBuilder::new().program("mount\0").set_args(["-o\0","remount\0","-a\0"].to_vec()).spawn() {
-        eprintln!("Lazy mount failed: {}", e);
+        eprintln!("Lazy: mount failed: {}", e);
     }
 }
 
-pub fn disable_nologin() {
-    let _ = std::fs::remove_file("/run/nologin");
+pub fn enable_swap() {
+    if let Err(e) = CommandBuilder::new().program("swapon\0").arg("-a\0")).spawn() {
+        eprintln!("Lazy: enable swap failed: {}", e);
+    }
 }
