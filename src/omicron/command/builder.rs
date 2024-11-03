@@ -141,7 +141,7 @@ impl ShellCommand for CommandBuilder {
 
         unsafe {
             // fork, create new session if necessary & execute
-            let result = crate::omicron::command::utils::execute(self.program.as_str(), &ptr_args, self.new_group, self.pipe_out);
+            let result = crate::omicron::command::utils::execute(self.program.as_str(), &ptr_args, self.new_group, -1, self.pipe_out);
             if let Ok(x) = result {
                 return Ok(x.0);
             }

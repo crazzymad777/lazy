@@ -6,7 +6,7 @@ use crate::omicron::Process;
 // 0 - for child
 // <0 - error
 // >0 - parent, Process::new()
-pub unsafe fn execute(program: &str, ptr_args: &Vec<*const i8>, new_group: bool, pipe_out: bool) -> Result<(Process, Option<libc::c_int>), String> {
+pub unsafe fn execute(program: &str, ptr_args: &Vec<*const i8>, new_group: bool, fd_in: libc::c_int, pipe_out: bool) -> Result<(Process, Option<libc::c_int>), String> {
     use crate::omicron::utils::errno_to_string;
     use crate::omicron::utils::Cstr;
 
@@ -37,7 +37,12 @@ pub unsafe fn execute(program: &str, ptr_args: &Vec<*const i8>, new_group: bool,
     unsafe {
         // redirect stdio
         let new_fd_err = libc::open(Cstr::new_magic("/dev/null\0"), libc::O_WRONLY);
-        let new_fd_in = libc::open(Cstr::new_magic("/dev/null\0"), libc::O_RDONLY);
+        let new_fd_in = if fd_in == -1 {
+            libc::open(Cstr::new_magic("/dev/null\0"), libc::O_RDONLY)
+        } else {
+            fd_in
+        };
+
         let mut new_fd_out = new_fd_err;
         if pipe_out {
             if fds[1] != -1 {
