@@ -16,13 +16,61 @@ impl ToString for CommandBuilder {
     }
 }
 
+impl ShellCommandBuilder {
+    pub fn new() -> ShellCommandBuilder {
+        ShellCommandBuilder {
+            builders: Vec::new()
+        }
+    }
+
+    pub fn program(&mut self, program: &str) -> &mut Self {
+        let mut builder = CommandBuilder::new();
+        builder.program(program);
+        self.builders.push(builder);
+        self
+    }
+
+    pub fn group(&mut self) -> &mut Self {
+        if let Some(x) = self.builders.last_mut() {
+            x.group();
+        }
+        self
+    }
+
+    pub fn no_group(&mut self) -> &mut Self {
+        if let Some(x) = self.builders.last_mut() {
+            x.no_group();
+        }
+        self
+    }
+
+    pub fn arg(&mut self, argument: &str) -> &mut Self {
+        if let Some(x) = self.builders.last_mut() {
+            x.arg(argument);
+        }
+        self
+    }
+
+    pub fn set_args(&mut self, arguments: Vec<&str>) -> &mut Self {
+        if let Some(x) = self.builders.last_mut() {
+            x.set_args(arguments);
+        }
+        self
+    }
+
+    pub fn pipe(&mut self) -> &mut Self {
+        self
+    }
+}
+
 // Any &str passed to CommandBuilder must be checked
 impl CommandBuilder {
     pub fn new() -> CommandBuilder {
         CommandBuilder {
             program: String::from(""),
             args: Vec::new(),
-            new_group: false
+            new_group: true,
+            pipe_out: false
         }
     }
 
@@ -38,7 +86,7 @@ impl CommandBuilder {
         self
     }
 
-    pub fn simple(&mut self) -> &mut Self {
+    pub fn no_group(&mut self) -> &mut Self {
         self.new_group = false;
         self
     }
@@ -62,7 +110,16 @@ impl CommandBuilder {
         self
     }
 
-    pub fn spawn(&self) -> Result<Process, String> {
+    pub fn pipe(&mut self) -> &mut Self {
+        self.pipe_out = true;
+        self
+    }
+}
+
+use crate::omicron::ShellCommand;
+
+impl ShellCommand for CommandBuilder {
+    fn spawn(&self) -> Result<Process, String> {
         use crate::omicron::utils::Cstr;
 
         // We must provide correct arguments for execute function
@@ -84,7 +141,11 @@ impl CommandBuilder {
 
         unsafe {
             // fork, create new session if necessary & execute
-            crate::omicron::command::utils::execute(self.program.as_str(), &ptr_args, self.new_group)
+            let result = crate::omicron::command::utils::execute(self.program.as_str(), &ptr_args, self.new_group, self.pipe_out);
+            if let Ok(x) = result {
+                return Ok(x.0);
+            }
+            Err(result.err().unwrap())
         }
     }
 }
@@ -95,6 +156,14 @@ impl CommandBuilder {
 pub struct CommandBuilder {
     program: String,
     args: Vec<String>,
-    new_group: bool
+    new_group: bool,
+    pipe_out: bool
+    // ,
+    // stdout: Option<String>,
+    // stderr: Option<String>,
+    // stdin: Option<String>
 }
 
+pub struct ShellCommandBuilder {
+    builders: Vec<CommandBuilder>
+}

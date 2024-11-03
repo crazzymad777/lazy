@@ -5,6 +5,9 @@ pub mod command;
 pub mod utils;
 pub mod shell;
 
+pub trait ShellCommand {
+    fn spawn(&self) -> Result<Process, String>;
+}
 
 #[derive(Copy, Clone)]
 pub struct Process {

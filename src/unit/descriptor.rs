@@ -22,6 +22,7 @@ impl UnitDescriptor {
     }
 
     pub fn spawn(&self, number: Option<u32>) -> Unit {
+        use crate::omicron::ShellCommand;
         let x = self.image.spawn();
         let mut unit = Unit::new(self.clone(), number);
         if let Ok(x) = x {

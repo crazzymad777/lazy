@@ -23,8 +23,8 @@ impl CommandParser {
         self.builder.group();
     }
 
-    pub fn set_simple(&mut self) {
-        self.builder.simple();
+    pub fn set_no_group(&mut self) {
+        self.builder.no_group();
     }
 
     fn load(&mut self) {
