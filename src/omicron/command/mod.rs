@@ -3,7 +3,7 @@ pub mod parser;
 mod utils;
 
 pub use crate::omicron::command::builder::ShellCommandBuilder;
-pub use crate::omicron::command::builder::CommandBuilder;
+// pub use crate::omicron::command::builder::CommandBuilder;
 pub use crate::omicron::command::parser::CommandParser;
 pub use crate::omicron::command::parser::parse;
 

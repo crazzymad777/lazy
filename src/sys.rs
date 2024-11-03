@@ -43,7 +43,7 @@ pub fn init_mount() {
 
 pub fn mount_fstab() {
     use crate::omicron::ShellCommand;
-    use crate::omicron::command::CommandBuilder;
+    use crate::omicron::command::builder::CommandBuilder;
     // remount all
     println!("Mount all");
     if let Err(e) = CommandBuilder::new().program("mount\0").set_args(["-o\0","remount\0","-a\0"].to_vec()).spawn() {
@@ -53,7 +53,7 @@ pub fn mount_fstab() {
 
 pub fn enable_swap() {
     use crate::omicron::ShellCommand;
-    use crate::omicron::command::CommandBuilder;
+    use crate::omicron::command::builder::CommandBuilder;
     if let Err(e) = CommandBuilder::new().program("swapon\0").arg("-a\0").spawn() {
         eprintln!("Lazy: enable swap failed: {}", e);
     }
