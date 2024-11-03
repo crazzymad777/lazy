@@ -1,8 +1,8 @@
-use crate::omicron::command::CommandBuilder;
+use crate::omicron::command::ShellCommandBuilder;
 
 pub struct CommandParser {
     memory: String, // use raw bytes?
-    builder: CommandBuilder,
+    builder: ShellCommandBuilder,
     toggle: bool,
     in_single_quotes: bool,
     escape: bool
@@ -12,7 +12,7 @@ impl CommandParser {
     pub fn new() -> CommandParser {
         CommandParser {
             memory: String::with_capacity(256),
-            builder: CommandBuilder::new(),
+            builder: ShellCommandBuilder::new(),
             toggle: false,
             in_single_quotes: false,
             escape: false
@@ -45,9 +45,35 @@ impl CommandParser {
         }
     }
 
+    fn feed_char_no_sepataror(&mut self, x: char) {
+        if x == '\'' {
+            if self.escape {
+                self.escape = false;
+                self.memory.push(x);
+            } else {
+                self.in_single_quotes = true
+            }
+        } else {
+            if x == '\\' && !self.in_single_quotes {
+                if self.escape {
+                    self.escape = false;
+                    self.memory.push(x);
+                } else {
+                    self.escape = true;
+                }
+            } else {
+                if x == '|' {
+                    self.builder.pipe();
+                } else {
+                    self.memory.push(x);
+                }
+            }
+        }
+    }
+
     pub fn feed_char_with_sepataror(&mut self, x: char, separator: char) {
-        if x == separator {
-            if x == ' ' {
+        if (x == ' ' && x.is_whitespace()) || x == separator {
+            if x.is_whitespace() {
                 self.load();
                 self.memory = String::from("");
             }
@@ -55,29 +81,11 @@ impl CommandParser {
                 self.in_single_quotes = false;
             }
         } else {
-            if x == '\'' {
-                if self.escape {
-                    self.escape = false;
-                    self.memory.push(x);
-                } else {
-                    self.in_single_quotes = true
-                }
-            } else {
-                if x == '\\' && !self.in_single_quotes {
-                    if self.escape {
-                        self.escape = false;
-                        self.memory.push(x);
-                    } else {
-                        self.escape = true;
-                    }
-                } else {
-                    self.memory.push(x);
-                }
-            }
+            self.feed_char_no_sepataror(x);
         }
     }
 
-    pub fn finish(mut self) -> CommandBuilder {
+    pub fn finish(mut self) -> ShellCommandBuilder {
         if self.memory != "" {
             self.load();
         }
@@ -85,7 +93,7 @@ impl CommandParser {
     }
 }
 
-pub fn parse(_command: &str) -> CommandBuilder {
+pub fn parse(_command: &str) -> ShellCommandBuilder {
     let mut parser = CommandParser::new();
 
     for x in _command.chars() {

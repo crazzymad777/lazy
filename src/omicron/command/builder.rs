@@ -159,6 +159,7 @@ impl ShellCommand for ShellCommandBuilder {
         let mut result = Err("Empty ShellCommandBuilder".to_string());
         let builders = &self.builders;
         let mut fd_in: Option<libc::c_int> = None;
+
         for x in builders {
             result = x.spawn_with_fd_in(fd_in.or(Some(-1)).unwrap());
             fd_in = if let Ok(x) = result {
@@ -191,6 +192,7 @@ pub struct CommandBuilder {
     // stdin: Option<String>
 }
 
+#[derive(Clone)]
 pub struct ShellCommandBuilder {
     builders: Vec<CommandBuilder>
 }

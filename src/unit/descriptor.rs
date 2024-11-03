@@ -1,9 +1,9 @@
-use crate::omicron::command::CommandBuilder;
+use crate::omicron::command::ShellCommandBuilder;
 use crate::unit::Unit;
 
 pub struct UnitDescriptor {
     original_name: String,
-    image: CommandBuilder
+    image: ShellCommandBuilder
 }
 
 impl Clone for UnitDescriptor {
@@ -13,7 +13,7 @@ impl Clone for UnitDescriptor {
 }
 
 impl UnitDescriptor {
-    pub fn new(name: String, image: CommandBuilder) -> UnitDescriptor {
+    pub fn new(name: String, image: ShellCommandBuilder) -> UnitDescriptor {
         UnitDescriptor {original_name: name, image}
     }
 
