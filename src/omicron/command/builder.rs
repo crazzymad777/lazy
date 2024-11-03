@@ -114,12 +114,8 @@ impl CommandBuilder {
         self.pipe_out = true;
         self
     }
-}
 
-use crate::omicron::ShellCommand;
-
-impl ShellCommand for CommandBuilder {
-    fn spawn(&self) -> Result<Process, String> {
+    pub fn spawn_with_fd_in(&self, fd_in: libc::c_int) -> Result<(Process, Option<libc::c_int>), String> {
         use crate::omicron::utils::Cstr;
 
         // We must provide correct arguments for execute function
@@ -141,14 +137,45 @@ impl ShellCommand for CommandBuilder {
 
         unsafe {
             // fork, create new session if necessary & execute
-            let result = crate::omicron::command::utils::execute(self.program.as_str(), &ptr_args, self.new_group, -1, self.pipe_out);
-            if let Ok(x) = result {
-                return Ok(x.0);
+            crate::omicron::command::utils::execute(self.program.as_str(), &ptr_args, self.new_group, fd_in, self.pipe_out)
+        }
+    }
+}
+
+use crate::omicron::ShellCommand;
+
+impl ShellCommand for CommandBuilder {
+    fn spawn(&self) -> Result<Process, String> {
+        let result = self.spawn_with_fd_in(-1);
+        if let Ok(x) = result {
+            return Ok(x.0);
+        }
+        Err(result.err().unwrap())
+    }
+}
+
+impl ShellCommand for ShellCommandBuilder {
+    fn spawn(&self) -> Result<Process, String> {
+        let mut result = Err("Empty ShellCommandBuilder".to_string());
+        let builders = &self.builders;
+        let mut fd_in: Option<libc::c_int> = None;
+        for x in builders {
+            result = x.spawn_with_fd_in(fd_in.or(Some(-1)).unwrap());
+            fd_in = if let Ok(x) = result {
+                x.1
+            } else {
+                Some(-1)
             }
+        }
+
+        if let Ok(x) = result {
+            Ok(x.0)
+        } else {
             Err(result.err().unwrap())
         }
     }
 }
+
 
 // &str can be stored in struct if and only if when it was checked
 
