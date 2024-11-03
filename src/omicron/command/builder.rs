@@ -142,7 +142,7 @@ impl CommandBuilder {
         self
     }
 
-    pub fn spawn_with_fd_in(&self, fd_in: libc::c_int) -> Result<(Process, Option<libc::c_int>), String> {
+    pub fn spawn_with_fd_in(&self, fd_in: libc::c_int) -> Result<(Process, libc::c_int), String> {
         use crate::omicron::utils::Cstr;
 
         // We must provide correct arguments for execute function
@@ -185,14 +185,14 @@ impl ShellCommand for ShellCommandBuilder {
     fn spawn(&self) -> Result<Process, String> {
         let mut result = Err("Empty ShellCommandBuilder".to_string());
         let builders = &self.builders;
-        let mut fd_in: Option<libc::c_int> = None;
+        let mut fd_in = -1;
 
         for x in builders {
-            result = x.spawn_with_fd_in(fd_in.or(Some(-1)).unwrap());
+            result = x.spawn_with_fd_in(fd_in);
             fd_in = if let Ok(x) = result {
                 x.1
             } else {
-                Some(-1)
+                -1
             }
         }
 
