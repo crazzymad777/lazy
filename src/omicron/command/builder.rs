@@ -44,6 +44,13 @@ impl ShellCommandBuilder {
         self
     }
 
+    pub fn pass_arg(&mut self, argument: &str) -> &mut Self {
+        if let Some(x) = self.builders.last_mut() {
+            x.pass_arg(argument);
+        }
+        self
+    }
+
     pub fn arg(&mut self, argument: &str) -> &mut Self {
         if let Some(x) = self.builders.last_mut() {
             x.arg(argument);
@@ -59,6 +66,15 @@ impl ShellCommandBuilder {
     }
 
     pub fn pipe(&mut self) -> &mut Self {
+        if let Some(x) = self.builders.last_mut() {
+            x.pipe();
+        }
+        self
+    }
+
+    pub fn new_program(&mut self) -> &mut Self {
+        let mut builder = CommandBuilder::new();
+        self.builders.push(builder);
         self
     }
 }
@@ -70,7 +86,8 @@ impl CommandBuilder {
             program: String::from(""),
             args: Vec::new(),
             new_group: true,
-            pipe_out: false
+            pipe_out: false,
+            toggle: false
         }
     }
 
@@ -78,6 +95,16 @@ impl CommandBuilder {
         use crate::omicron::utils::Cstr;
         Cstr::check(program).unwrap();
         self.program = String::from(program);
+        self
+    }
+
+    pub fn pass_arg(&mut self, argument: &str) -> &mut Self {
+        if self.toggle {
+            self.arg(argument);
+        } else {
+            self.program(argument);
+            self.toggle = true;
+        }
         self
     }
 
@@ -185,7 +212,8 @@ pub struct CommandBuilder {
     program: String,
     args: Vec<String>,
     new_group: bool,
-    pipe_out: bool
+    pipe_out: bool,
+    toggle: bool
     // ,
     // stdout: Option<String>,
     // stderr: Option<String>,

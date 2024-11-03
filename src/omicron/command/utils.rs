@@ -13,7 +13,7 @@ pub unsafe fn execute(program: &str, ptr_args: &Vec<*const i8>, new_group: bool,
     let mut fds: [libc::c_int; 2] = [-1, -1];
     let mut fd: Option<libc::c_int> = None;
     if pipe_out {
-        libc::pipe(fds.as_mut_ptr());
+        libc::pipe2(fds.as_mut_ptr(), libc::O_CLOEXEC);
         fd = Some(fds[0]);
     }
 

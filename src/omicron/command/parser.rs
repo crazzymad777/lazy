@@ -3,20 +3,20 @@ use crate::omicron::command::ShellCommandBuilder;
 pub struct CommandParser {
     memory: String, // use raw bytes?
     builder: ShellCommandBuilder,
-    toggle: bool,
     in_single_quotes: bool,
     escape: bool
 }
 
 impl CommandParser {
     pub fn new() -> CommandParser {
-        CommandParser {
+        let mut x = CommandParser {
             memory: String::with_capacity(256),
             builder: ShellCommandBuilder::new(),
-            toggle: false,
             in_single_quotes: false,
             escape: false
-        }
+        };
+        x.builder.new_program();
+        x
     }
 
     pub fn set_group(&mut self) {
@@ -28,12 +28,9 @@ impl CommandParser {
     }
 
     fn load(&mut self) {
-        self.memory.push('\0');
-        if self.toggle {
-            self.builder.arg(&self.memory);
-        } else {
-            self.builder.program(&self.memory);
-            self.toggle = true;
+        if self.memory != "" {
+            self.memory.push('\0');
+            self.builder.pass_arg(&self.memory);
         }
     }
 
@@ -63,7 +60,9 @@ impl CommandParser {
                 }
             } else {
                 if x == '|' {
-                    self.builder.pipe();
+                    self.load();
+                    self.memory = String::from("");
+                    self.builder.pipe().new_program();
                 } else {
                     self.memory.push(x);
                 }
